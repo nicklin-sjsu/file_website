@@ -9,6 +9,7 @@ var bodyParser = require('body-parser');
 
 var routes = require('./routes/index');
 var users = require('./routes/users');
+var mysql = require('mysql');
 
 var app = express();
 
@@ -24,8 +25,41 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
-app.use('/users', users);
+app.use(routes);
+// app.use('/users', users);
+// app.use(app.router);
+// routes.initialize(app);
+
+var con = mysql.createConnection({
+    host: "localhost",
+    user: "root",
+    password: "root",
+    database: "file_website"
+});
+
+con.connect(function(err) {
+    if (err) throw err;
+    console.log("Connected!");
+});
+
+app.get('/get_user', (req, res) => {
+    let user_id = req.query.user_id;
+    var sql = mysql.format("SELECT * FROM users WHERE id = ?", [user_id]);
+    con.query(sql, function (err, result) {
+        if (err) {
+            console.log(err);
+            res.send({ 'code': 400, 'message': 'Invalid user id' });
+        } else {
+            if (result.length > 0) {
+                res.send({ 'code': 200, 'data': {'first_name': result[0].first_name, 'last_name': result[0].last_name}} );
+            } else {
+                res.send({ 'code': 400, 'message': 'Invalid user id' });
+            }
+            
+        }
+        
+    });
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
@@ -34,7 +68,6 @@ app.use(function (req, res, next) {
     next(err);
 });
 
-// error handlers
 
 // development error handler
 // will print stacktrace

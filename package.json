@@ -10,12 +10,18 @@
     "name": ""
   },
   "dependencies": {
+    "aws-sdk": "latest",
+    "axios": "^0.27.2",
     "body-parser": "^1.15.0",
     "cookie-parser": "^1.4.0",
     "debug": "^2.2.0",
+    "ejs": "latest",
     "express": "^4.14.0",
     "morgan": "^1.7.0",
+    "mysql": "^2.18.1",
+    "mysql-ssh": "^1.0.6",
     "pug": "^2.0.0-beta6",
-    "serve-favicon": "^2.3.0"
+    "serve-favicon": "^2.3.0",
+    "xhr2": "^0.2.1"
   }
 }

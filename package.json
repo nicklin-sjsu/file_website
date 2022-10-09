@@ -4,17 +4,21 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node app.js"
+    "dev": "DOTENV_CONFIG_PATH=.development.env node app.js",
+    "start": "set NODE_ENV=production&& node app.js"
   },
   "dependencies": {
-    "forever": "4.0.0",
-    "express": "latest",
     "aws-sdk": "latest",
+    "bcrypt": "^5.1.0",
     "body-parser": "latest",
+    "dotenv": "^16.0.3",
     "ejs": "^3.1.8",
+    "express": "latest",
+    "express-openid-connect": "latest",
+    "forever": "4.0.0",
     "formidable": "latest",
     "mysql": "latest",
     "request": "latest",
-    "bcrypt": "^5.1.0"
+    "win-node-env": "^0.6.1"
   }
 }

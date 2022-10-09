@@ -6,13 +6,38 @@ var formidable = require("formidable");
 var AWS = require('aws-sdk');
 var bodyParser = require('body-parser');
 var path = require('path');
+var { auth } = require('express-openid-connect');
+var dotenv = require('dotenv');
+////require('dotenv').config({ path: __dirname + `/./../../.env.${process.env.NODE_ENV}` });
+dotenv.config({
+    path: path.resolve(__dirname, `${process.env.NODE_ENV}.env`)
+});
+//dotenv.config({ path: path.resolve(__dirname, `.env.${process.env.NODE_ENV}`) });
 
 var app = express();
-
 var port = process.env.PORT || 3000;
-
 //var snsTopic = process.env.NEW_SIGNUP_TOPIC;
 var theme = 'slate';
+
+console.log(`NODE_ENV=${config.NODE_ENV}`);
+
+console.log(path.resolve(__dirname, `.env.${process.env.NODE_ENV}`));
+console.log(process.env.BASE_URL);
+console.log(process.env.SECRET);
+const auth_config = {
+    baseURL: process.env.BASE_URL,
+    clientID: process.env.CLIENT_ID,
+    issuerBaseURL: process.env.ISSUER_BASE_URL,
+    secret: process.env.SECRET,
+};
+
+// auth router attaches /login, /logout, and /callback routes to the baseURL
+app.use(auth(auth_config));
+
+// req.isAuthenticated is provided from the auth router
+app.get('/', (req, res) => {
+    res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out')
+});
 
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/public');
@@ -22,12 +47,19 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 AWS.config.region = process.env.REGION
 
+//var con = mysql.createConnection({
+//    host: 'file-website-rds.cm3uialzguhs.us-west-2.rds.amazonaws.com',
+//    user: 'root',
+//    password: 'password',
+//    port: '3306',
+//    database: 'file_website',
+//});
 var con = mysql.createConnection({
-    host: 'file-website-rds.cm3uialzguhs.us-west-2.rds.amazonaws.com',
-    user: 'root',
-    password: 'password',
-    port: '3306',
-    database: 'file_website',
+    host: process.env.DATABASE_HOST,
+    user: process.env.DATABASE_USER,
+    password: process.env.DATABASE_PWD,
+    port: process.env.DATABASE_PORT,
+    database: process.env.DATABASE_DATABASE,
 });
 
 con.connect(function (err) {

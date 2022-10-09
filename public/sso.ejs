@@ -231,9 +231,8 @@
 				if (res.code == 200) {
 					location.reload();
 				} else {
-					var b;
+                    alert(res.message);
 				}
-				alert(res.message);
 			})
 			.catch(console.error);
 		}

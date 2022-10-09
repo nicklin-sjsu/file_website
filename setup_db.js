@@ -43,7 +43,8 @@ con.changeUser({database : 'file_website'}, function(err) {
 //     console.log("TABLE user dropped");
 // });
 
-var sql = "CREATE TABLE users (id INT NOT NULL AUTO_INCREMENT, first_name VARCHAR(255) NOT NULL, last_name VARCHAR(255) NOT NULL, PRIMARY KEY (id))";
+var sql = "CREATE TABLE users (id INT NOT NULL AUTO_INCREMENT, first_name VARCHAR(255) NOT NULL, \
+last_name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, \ PRIMARY KEY (id))";
 con.query(sql, function (err, result) {
     if (err) throw err;
     console.log("TABLE user created");
@@ -59,7 +60,7 @@ con.query(sql, function (err, result) {
     console.log("TABLE files created");
 });
 
-var sql = "INSERT INTO users (first_name, last_name) VALUES ('Cody', 'SB')";
+var sql = "INSERT INTO users (first_name, last_name, email, password) VALUES ('Cody', 'SB', 'cody@sb.com', 'root')";
 con.query(sql, function (err, result) {
     if (err) throw err;
     console.log("row added to TABLE user");

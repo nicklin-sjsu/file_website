@@ -19,6 +19,6 @@
     "formidable": "latest",
     "mysql": "latest",
     "request": "latest",
-    "win-node-env": "^0.6.1"
+    "win-node-env": "latest"
   }
 }

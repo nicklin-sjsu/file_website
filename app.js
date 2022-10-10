@@ -57,42 +57,38 @@ app.get('/sso', checkNotAuthenticated, function (req, res) {
 });
 
 app.post('/upload_file', checkAuthenticated, function (req, res) {
-    if (user == null) {
-        res.send({ 'code': 402, 'message': 'Please Login first' });
-    } else {
-        let user_id = user.id;
-        const form = formidable({ multiples: true });
-        form.parse(req, (err, fields, files) => {
-            var fields_list = Object.entries(fields);
-            var files_list = Object.entries(files);
-            for (let i = 0; i < files_list.length; i++) {
-                var [filed_key, description] = fields_list[i];
-                const [key, file] = files_list[i];
+    let user_id = req.user.id;
+    const form = formidable({ multiples: true });
+    form.parse(req, (err, fields, files) => {
+        var fields_list = Object.entries(fields);
+        var files_list = Object.entries(files);
+        for (let i = 0; i < files_list.length; i++) {
+            var [filed_key, description] = fields_list[i];
+            const [key, file] = files_list[i];
                 
-                let file_name = file.originalFilename;
-                var file_key = user_id + '/' + file_name;
-                var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)', 
-                [user_id, file_name, description]);
-                con.query(sql, function (err, result) {
-                    if (err) {
-                        res.send({ 'code': 400, 'message': 'Information error' });
-                    }
-                    console.log('Row added to TABLE files');
-                    request.post(
-                        'https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/file/' + file_key,
-                        { file },
-                        function (error, response, body) {
-                            if (!error && response.statusCode == 200) {
-                                res.send({ 'code': 200, 'message': 'Upload Successfully' });
-                            } else {
-                                console.log(error);
-                            }
+            let file_name = file.originalFilename;
+            var file_key = user_id + '/' + file_name;
+            var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)', 
+            [user_id, file_name, description]);
+            con.query(sql, function (err, result) {
+                if (err) {
+                    res.send({ 'code': 400, 'message': 'Information error' });
+                }
+                console.log('Row added to TABLE files');
+                request.post(
+                    'https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/file/' + file_key,
+                    { file },
+                    function (error, response, body) {
+                        if (!error && response.statusCode == 200) {
+                            res.send({ 'code': 200, 'message': 'Upload Successfully' });
+                        } else {
+                            console.log(error);
                         }
-                    );
-                });
-            }
-        });
-    }
+                    }
+                );
+            });
+        }
+    });
 });
 
 app.post('/signin', checkNotAuthenticated, passport.authenticate('local', {

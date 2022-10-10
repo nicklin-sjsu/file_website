@@ -1,7 +1,6 @@
 const con = require('./db_connect.js');
 var drop = true;
 
-
 if (drop == true) {
     var sql = "DROP DATABASE IF EXISTS file_website";
     con.query(sql, function (err, result) {

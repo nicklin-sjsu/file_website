@@ -4,6 +4,7 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
+    "db": "NODE_ENV=production node setup_db.js",
     "dev": "NODE_ENV=development node app.js",
     "start": "NODE_ENV=production node app.js"
   },

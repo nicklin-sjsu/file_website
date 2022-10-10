@@ -1,139 +1,62 @@
-var express = require('express');
-var request = require('request');
-var mysql = require('mysql');
-var bcrypt = require("bcrypt");
-var formidable = require("formidable");
-var AWS = require('aws-sdk');
-var bodyParser = require('body-parser');
-var path = require('path');
-var { auth } = require('express-openid-connect');
-var dotenv = require('dotenv');
-////require('dotenv').config({ path: __dirname + `/./../../.env.${process.env.NODE_ENV}` });
+const express = require('express');
+const request = require('request');
+const mysql = require('mysql');
+const bcrypt = require("bcrypt");
+const formidable = require("formidable");
+const AWS = require('aws-sdk');
+const bodyParser = require('body-parser');
+const path = require('path');
+const dotenv = require('dotenv');
+const passport = require('passport');
+const initializePassport = require('./passport-config');
+const flash = require('express-flash');
+const session = require('express-session');
+const methodOverride = require('method-override');
+const con = require('./db_connect.js');
+const app = express();
+
+var theme = 'slate';
+const port = process.env.PORT || 3000;
+//var snsTopic = process.env.NEW_SIGNUP_TOPIC;
+
 dotenv.config({
     path: path.resolve(__dirname, `${process.env.NODE_ENV}.env`)
-});
-//dotenv.config({ path: path.resolve(__dirname, `.env.${process.env.NODE_ENV}`) });
-
-var app = express();
-var port = process.env.PORT || 3000;
-//var snsTopic = process.env.NEW_SIGNUP_TOPIC;
-var theme = 'slate';
-
-console.log(`NODE_ENV=${config.NODE_ENV}`);
-
-console.log(path.resolve(__dirname, `.env.${process.env.NODE_ENV}`));
-console.log(process.env.BASE_URL);
-console.log(process.env.SECRET);
-const auth_config = {
-    baseURL: process.env.BASE_URL,
-    clientID: process.env.CLIENT_ID,
-    issuerBaseURL: process.env.ISSUER_BASE_URL,
-    secret: process.env.SECRET,
-};
-
-// auth router attaches /login, /logout, and /callback routes to the baseURL
-app.use(auth(auth_config));
-
-// req.isAuthenticated is provided from the auth router
-app.get('/', (req, res) => {
-    res.send(req.oidc.isAuthenticated() ? 'Logged in' : 'Logged out')
 });
 
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/public');
-
+app.use(methodOverride('_method'))
 app.use(express.static(__dirname + '/static'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 AWS.config.region = process.env.REGION
 
-//var con = mysql.createConnection({
-//    host: 'file-website-rds.cm3uialzguhs.us-west-2.rds.amazonaws.com',
-//    user: 'root',
-//    password: 'password',
-//    port: '3306',
-//    database: 'file_website',
-//});
-var con = mysql.createConnection({
-    host: process.env.DATABASE_HOST,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PWD,
-    port: process.env.DATABASE_PORT,
-    database: process.env.DATABASE_DATABASE,
+initializePassport(passport);
+
+app.use(flash());
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'asdfasdfasdfasdfasdfadsfasdfasdfasdfasdfasdfasdfasdfadsf',
+    resave: false,
+    saveUninitialized: false
+}));
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.get('/', checkAuthenticated, function (req, res) {
+    res.render('main', {
+        theme: process.env.THEME || theme,
+        flask_debug: process.env.FLASK_DEBUG || 'false'
+    });
 });
 
-con.connect(function (err) {
-    if (err) {
-        console.error('Database connection failed: ' + err.stack);
-        return;
-    }
-    console.log('Connected to database.');
-});
-
-app.get('/', function (req, res) {
-    if (user == null) {
-        res.render('sso', {
-            theme: process.env.THEME || theme,
-            flask_debug: process.env.FLASK_DEBUG || 'false'
-        });
-    } else {
-        res.render('main', {
-            theme: process.env.THEME || theme,
-            flask_debug: process.env.FLASK_DEBUG || 'false'
-        });
-    }
-});
-
-app.get('/sso', function (req, res) {
+app.get('/sso', checkNotAuthenticated, function (req, res) {
     res.render('sso', {
         theme: process.env.THEME || theme,
         flask_debug: process.env.FLASK_DEBUG || 'false'
     });
 });
 
-app.get('/main', function (req, res) {
-    if (user == null) {
-        res.render('sso', {
-            theme: process.env.THEME || theme,
-            flask_debug: process.env.FLASK_DEBUG || 'false'
-        });
-    } else {
-        res.render('main', {
-            theme: process.env.THEME || theme,
-            flask_debug: process.env.FLASK_DEBUG || 'false'
-        });
-    }
-});
-
-app.get('/test', function (req, res) {
-    res.render('test', {
-        theme: process.env.THEME || theme,
-        flask_debug: process.env.FLASK_DEBUG || 'false',
-        uploadurl: 'https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/file/'
-    });
-});
-
-var user = null;
-
-app.get('/get_user', (req, res) => {
-    let user_id = req.query.user_id;
-    var sql = mysql.format('SELECT * FROM users WHERE id = ?', [user_id]);
-    con.query(sql, function (err, result) {
-        if (err) {
-            res.send({ 'code': 400, 'message': 'Invalid user id' });
-        } else {
-            if (result.length > 0) {
-                res.send({ 'code': 200, 'data': { 'first_name': result[0].first_name, 'last_name': result[0].last_name } });
-            } else {
-                res.send({ 'code': 400, 'message': 'Invalid user id' });
-            }
-
-        }
-
-    });
-});
-
-app.post('/upload_file', (req, res) => {
+app.post('/upload_file', checkAuthenticated, function (req, res) {
     if (user == null) {
         res.send({ 'code': 402, 'message': 'Please Login first' });
     } else {
@@ -172,46 +95,21 @@ app.post('/upload_file', (req, res) => {
     }
 });
 
-app.post('/signin', function (req, res) {
-    var email = req.body.email;
-    var password = req.body.password;
-    var sql = mysql.format('SELECT password FROM users WHERE email = ?', [email]);
-    con.query(sql, function (err, result) {
-        if (result.length > 0) {
-            var user_pass = result[0].password;
-            bcrypt.compare(password, user_pass, function (err, compare_result) {
-                if (err) {
-                    res.send({ 'code': 400, 'message': 'Internal Error' });
-                } else {
-                    if (compare_result) {
-                        var sql = mysql.format('SELECT id, first_name, last_name, email FROM users WHERE email = ?',
-                            [email]);
-                        con.query(sql, function (err, result) {
-                            user = result[0];
-                            res.send({ 'code': 200, 'data': { 'id': user['id'] }, 'message': 'Login Success' });
-                        });
-                    } else {
-                        res.send({ 'code': 401, 'message': 'Password Does Not Match' });
-                    }
-                }
-            });
-        }
-    });
-});
+app.post('/signin', checkNotAuthenticated, passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/sso',
+    failureFlash: true
+}));
 
+app.post('/signup', checkNotAuthenticated, function (req, res) {
+    try {
+        var first_name = req.body.first_name;
+        var last_name = req.body.last_name;
+        var email = req.body.email;
+        var password = req.body.password;
 
-app.post('/signup', function (req, res) {
-    var first_name = req.body.first_name;
-    var last_name = req.body.last_name;
-    var email = req.body.email;
-    var password = req.body.password;
-
-    var sql = mysql.format('SELECT * FROM users WHERE email = ?', [email]);
-    con.query(sql, function (err, result) {
-        if (err) {
-            console.log(err);
-            res.send({ 'code': 400, 'message': 'Internal error' });
-        } else {
+        var sql = mysql.format('SELECT * FROM users WHERE email = ?', [email]);
+        con.query(sql, function (err, result) {
             if (result.length > 0) {
                 res.send({ 'code': 400, 'message': 'Email already used' });
             } else {
@@ -221,17 +119,20 @@ app.post('/signup', function (req, res) {
                             [first_name, last_name, email, hash]);
                         con.query(sql2, function (err, result) {
                             if (err) {
-                                res.send({ 'code': 400, 'message': 'Email already used' });
+                                console.log(err);
+                                res.send({ 'code': 400, 'message': 'Internal Error' });
+                            } else {
+                                console.log('row added to TABLE user');
+                                res.send({ 'code': 200, 'message': 'Account registered' });
                             }
-                            console.log('row added to TABLE user');
-                            res.send({ 'code': 200 });
-                        });
+                        })
                     });
                 })
             }
-        }
-    });
-
+        });
+    } catch {
+        res.redirect('/register');
+    }
     // ddb.putItem({
     //     'TableName': ddbTable,
     //     'Item': item,
@@ -265,15 +166,22 @@ app.post('/signup', function (req, res) {
     // });
 });
 
-//var port = process.env.PORT || 3000;
+function checkAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return next();
+    }
+    res.redirect('/sso');
+}
+
+function checkNotAuthenticated(req, res, next) {
+    if (req.isAuthenticated()) {
+        return res.redirect('/');
+    }
+    next();
+}
 
 app.listen(port, function () {
     console.log('Server running at http://127.0.0.1:' + port + '/');
 });
-//module.exports = app;
 
-
-
-
-// app.listen(port);
 module.exports = app;

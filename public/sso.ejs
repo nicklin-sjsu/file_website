@@ -56,38 +56,39 @@
 			</div>
 
 			<p class="text-center">or:</p>
+			<form action="/signin" method="post">
+				<!-- Email input -->
+				<% if (messages.error) { %>
+				<div class='alert alert-danger' role='alert'>
+					<%= messages.error %>
+				</div>
+				<% } %>
 
-			<!-- Email input -->
-			<div class="form-outline mb-4">
-				<label class="form-label" for="signinEmail">Email</label>
-				<input type="email" id="signinEmail" class="form-control" />
-			</div>
+				<div class="form-outline mb-4">
+					<label class="form-label" for="signinEmail">Email</label>
+					<input type="email" name="signinEmail" id="signinEmail" class="form-control" />
+				</div>
 
-			<!-- Password input -->
-			<div class="form-outline mb-4">
-				<label class="form-label" for="signinPassword">Password</label>
-				<input type="password" id="signinPassword" class="form-control" />
-			</div>
+				<!-- Password input -->
+				<div class="form-outline mb-4">
+					<label class="form-label" for="signinPassword">Password</label>
+					<input type="password" name="signinPassword" id="signinPassword" class="form-control" />
+				</div>
 
-			<!-- 2 column grid layout -->
-			<div class="row mb-4">
-				<div class="col-md-6 d-flex justify-content-center">
-					<!-- Checkbox -->
-					<div class="form-check mb-3 mb-md-0">
-						<input class="form-check-input" type="checkbox" value="" id="signinCheck" />
-						<label class="form-check-label" for="signinCheck"> Remember me </label>
+				<!-- 2 column grid layout -->
+				<div class="row mb-4">
+					<div class="col-md-6 d-flex justify-content-center">
+						<!-- Checkbox -->
+						<div class="form-check mb-3 mb-md-0">
+							<input class="form-check-input" name="signincheck" type="checkbox" value="" id="signinCheck" />
+							<label class="form-check-label" for="signinCheck"> Remember me </label>
+						</div>
 					</div>
 				</div>
 
-<!-- 				<div class="col-md-6 d-flex justify-content-center">
-					Simple link
-					<a href="#!">Forgot password?</a>
-				</div> -->
-			</div>
-
-			<!-- Submit button -->
-			<button type="submit" class="btn btn-primary btn-block mb-4" onclick="signin()">Sign in</button>
-
+				<!-- Submit button -->
+				<button type="submit" class="btn btn-primary btn-block mb-4">Sign in</button>
+			</form>
 		</div>
 		<div class="tab-pane" id="pills-signup" role="tabpanel" aria-labelledby="tab-signup">
 			<div class="text-center mb-3">
@@ -151,7 +152,7 @@
 			</div>
 
 			<!-- Submit button -->
-			<button type="submit" class="btn btn-primary btn-block mb-3" onclick="signup()">signup</button>
+			<button type="button" class="btn btn-primary btn-block mb-3" onclick="signup()">Sign Up</button>
 		</div>
 
 		<div class="tab-pane" id="pills-admin" role="tabpanel" aria-labelledby="tab-admin">
@@ -210,33 +211,33 @@
 		}
 	}
 
-	function signin() {
-		var email = document.getElementById('signinEmail').value;
-		var password = document.getElementById('signinPassword').value;
-		var rememberMe = document.getElementById('signinCheck').value;
-		if (!email) {
-			alert("Please input your email");
-		} else if (!password) {
-			alert("Please input your password");
-		} else {
-			fetch("/signin", {
-				method: "POST",
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body : JSON.stringify({email: email, password: password})
-			})
-			.then((response) => response.json())
-			.then((res) => {
-				if (res.code == 200) {
-					location.reload();
-				} else {
-                    alert(res.message);
-				}
-			})
-			.catch(console.error);
-		}
-	}
+	//function signin() {
+	//	var email = document.getElementById('signinEmail').value;
+	//	var password = document.getElementById('signinPassword').value;
+	//	var rememberMe = document.getElementById('signinCheck').value;
+	//	if (!email) {
+	//		alert("Please input your email");
+	//	} else if (!password) {
+	//		alert("Please input your password");
+	//	} else {
+	//		fetch("/signin", {
+	//			method: "POST",
+	//			headers: {
+	//				'Content-Type': 'application/json'
+	//			},
+	//			body : JSON.stringify({email: email, password: password})
+	//		})
+	//		.then((response) => response.json())
+	//		.then((res) => {
+	//			if (res.code == 200) {
+	//				location.reload();
+	//			} else {
+ //                   alert(res.message);
+	//			}
+	//		})
+	//		.catch(console.error);
+	//	}
+	//}
 
 	function signup() {
 		var first_name = document.getElementById('signupFirstName').value;
@@ -269,12 +270,12 @@
 			.then((response) => response.json())
 			.then((res) => {
 				if (res.code == 200) {
-					var a;
+					alert(res.message);
+                    switchTab('signin');
 				} else {
-					var b;
+                    alert(res.message);
 				}
-				alert(res.message);
-			})
+            })
 			.catch(console.error);
 		}
 	}

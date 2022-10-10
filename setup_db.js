@@ -44,7 +44,7 @@ con.changeUser({database : 'file_website'}, function(err) {
 // });
 
 var sql = "CREATE TABLE users (id INT NOT NULL AUTO_INCREMENT, first_name VARCHAR(255) NOT NULL, \
-last_name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL, password VARCHAR(255) NOT NULL, \
+last_name VARCHAR(255) NOT NULL, email VARCHAR(255) NOT NULL UNIQUE, password VARCHAR(255) NOT NULL, \
 type INT NOT NULL DEFAULT 1, PRIMARY KEY(id)) ";
 con.query(sql, function (err, result) {
     if (err) throw err;

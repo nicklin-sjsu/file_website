@@ -4,8 +4,8 @@
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "dev": "DOTENV_CONFIG_PATH=.development.env node app.js",
-    "start": "set NODE_ENV=production&& node app.js"
+    "dev": "NODE_ENV=development node app.js",
+    "start": "NODE_ENV=production node app.js"
   },
   "dependencies": {
     "aws-sdk": "latest",
@@ -14,11 +14,16 @@
     "dotenv": "^16.0.3",
     "ejs": "^3.1.8",
     "express": "latest",
+    "express-flash": "^0.0.2",
     "express-openid-connect": "latest",
+    "express-session": "^1.17.3",
     "forever": "4.0.0",
     "formidable": "latest",
+    "method-override": "^3.0.0",
     "mysql": "latest",
+    "passport": "latest",
+    "passport-local": "latest",
     "request": "latest",
-    "win-node-env": "latest"
+    "win-node-env": "^0.6.1"
   }
 }

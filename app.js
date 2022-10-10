@@ -20,7 +20,7 @@ const port = process.env.PORT || 3000;
 //var snsTopic = process.env.NEW_SIGNUP_TOPIC;
 
 dotenv.config({
-    path: path.resolve(__dirname, `${process.env.NODE_ENV}.env`)
+    path: path.resolve(__dirname, `.env.${process.env.NODE_ENV}`)
 });
 
 app.set('view engine', 'ejs');

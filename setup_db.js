@@ -1,17 +1,6 @@
-var mysql = require('mysql');
+const con = require('./db_connect.js');
 var drop = true;
 
-var con = mysql.createConnection({
-    host: "localhost",
-    user: "root",
-    password: "root",
-    // database: "file_website"
-});
-
-con.connect(function(err) {
-    if (err) throw err;
-    console.log("Connected!");
-});
 
 if (drop == true) {
     var sql = "DROP DATABASE IF EXISTS file_website";
@@ -61,7 +50,7 @@ con.query(sql, function (err, result) {
     console.log("TABLE files created");
 });
 
-var sql = "INSERT INTO users (first_name, last_name, email, password) VALUES ('Cody', 'SB', 'cody@sb.com', 'root')";
+var sql = "INSERT INTO users (first_name, last_name, email, password) VALUES ('Cody', 'SB', 'cody@sb.com', '$2b$10$X/zruJudGuCAwm6DbzcKVundUlCgJ1vG3gGQ/Lo/cboerLXyFJrtW')";
 con.query(sql, function (err, result) {
     if (err) throw err;
     console.log("row added to TABLE user");

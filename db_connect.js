@@ -1,4 +1,10 @@
-var mysql = require('mysql');
+const mysql = require('mysql');
+const dotenv = require('dotenv');
+const path = require('path');
+
+dotenv.config({
+    path: path.resolve(__dirname, `.env.${process.env.NODE_ENV}`)
+});
 
 var con = mysql.createConnection({
     host: process.env.DATABASE_HOST || 'localhost',

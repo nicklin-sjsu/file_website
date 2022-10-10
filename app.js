@@ -18,6 +18,7 @@ const app = express();
 var theme = 'slate';
 const port = process.env.PORT || 3000;
 //var snsTopic = process.env.NEW_SIGNUP_TOPIC;
+const lambda_url = process.env.LAMBDA_URL || 'https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/';
 
 dotenv.config({
     path: path.resolve(__dirname, `.env.${process.env.NODE_ENV}`)
@@ -26,7 +27,7 @@ dotenv.config({
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/public');
 app.use(methodOverride('_method'))
-app.use(express.static(__dirname + '/static'));
+app.use(express.static(__dirname + '/public/img'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 AWS.config.region = process.env.REGION
@@ -45,7 +46,9 @@ app.use(passport.session());
 app.get('/', checkAuthenticated, function (req, res) {
     res.render('main', {
         theme: process.env.THEME || theme,
-        flask_debug: process.env.FLASK_DEBUG || 'false'
+        flask_debug: process.env.FLASK_DEBUG || 'false',
+        first_name: req.user.first_name,
+        last_name: req.user.last_name,
     });
 });
 
@@ -76,7 +79,7 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
                 }
                 console.log('Row added to TABLE files');
                 request.post(
-                    'https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/file/' + file_key,
+                    lambda_url + 'file/' + file_key,
                     { file },
                     function (error, response, body) {
                         if (!error && response.statusCode == 200) {
@@ -87,6 +90,33 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
                     }
                 );
             });
+        }
+    });
+});
+
+app.post('/get_file', checkAuthenticated, function (req, res) {
+    let user_id = req.user.id;
+    var file_key = req.body.file_key;
+
+    var sql = mysql.format('SELECT * FROM files WHERE file_key = ? and user_id = ?)',
+        [file_key, user_id]);
+    con.query(sql, function (err, result) {
+        if (err) {
+            res.send({ 'code': 400, 'message': 'Information error' });
+        }
+        if (result.length > 0) {
+            request.post(
+                lambda_url + 'get_file/' + file_key,
+                function (error, response, body) {
+                    if (!error && response.statusCode == 200) {
+                        res.send({ 'code': 200, 'message': 'Get file successfully', 'data': response.data });
+                    } else {
+                        console.log(error);
+                    }
+                }
+            );
+        } else {
+            res.send({ 'code': 400, 'message': 'No such file existed' });
         }
     });
 });
@@ -160,6 +190,13 @@ app.post('/signup', checkNotAuthenticated, function (req, res) {
     //         });
     //     }
     // });
+});
+
+app.post('/signout', checkAuthenticated, function (req, res, next) {
+    req.logout(function (err) {
+        if (err) { return next(err); }
+        res.redirect('/sso');
+    });
 });
 
 function checkAuthenticated(req, res, next) {

@@ -44,7 +44,8 @@ app.use(bodyParser.json());
 function sns_message(message) {
     var params = {
         Message: message,
-        TopicArn: process.env.TOPIC_ARN
+        TopicArn: process.env.TOPIC_ARN,
+        MessageGroupId: 'product-214'
     };
 
     var publishTextPromise = new AWS.SNS({ apiVersion: '2010-03-31' }).publish(params).promise();

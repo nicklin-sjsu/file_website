@@ -25,12 +25,14 @@ dotenv.config({
     path: path.resolve(__dirname, `.env.${process.env.NODE_ENV}`)
 });
 
-const SESConfig = {
-    apiVersion: "2010-12-01",
-    accessKeyId: process.env.AWS_ACCESS_KEY,
-    accessSecretKey: process.env.AWS_SECRET_KEY,
-    region: "us-west-2"
-}
+AWS.config.update({
+    region: 'us-west-2',
+    apiVersion: 'latest',
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY,
+        secretAccessKey: process.env.AWS_SECRET_KEY
+    }
+});
 
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/public');
@@ -38,7 +40,6 @@ app.use(methodOverride('_method'))
 app.use(express.static(__dirname + '/public/img'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-AWS.config.update(SESConfig);
 
 function sns_message(message) {
     var params = {

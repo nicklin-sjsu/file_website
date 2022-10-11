@@ -12,6 +12,7 @@
     "aws-sdk": "latest",
     "bcrypt": "^5.1.0",
     "body-parser": "latest",
+    "bootstrap": "latest",
     "dotenv": "^16.0.3",
     "ejs": "^3.1.8",
     "express": "latest",
@@ -21,10 +22,11 @@
     "forever": "4.0.0",
     "formidable": "latest",
     "method-override": "^3.0.0",
+    "moment": "^2.29.4",
     "mysql": "latest",
     "passport": "latest",
     "passport-local": "latest",
     "request": "latest",
-    "bootstrap@5.2.2": "latest"
+    "win-node-env": "^0.6.1"
   }
 }

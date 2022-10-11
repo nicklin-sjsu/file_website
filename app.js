@@ -14,6 +14,7 @@ const session = require('express-session');
 const methodOverride = require('method-override');
 const con = require('./db_connect.js');
 const url = require('url');
+const moment = require("moment");
 const app = express();
 
 var theme = 'slate';
@@ -75,20 +76,26 @@ app.use(passport.session());
 app.get('/', checkAuthenticated, get_file_list, get_user_list, function (req, res) {
     if (req.user.type == 1){
         res.render('main', {
-            files: req.file_list
+            files: req.file_list,
+            admin: false,
+            moment: moment
         });
     }
     else if(req.user.type == 0 || req.user.type == null){
         res.render('admin', {
             users: req.user_list,
-            manage_user_url: process.env.MANAGE_USER_URL
+            manage_user_url: process.env.MANAGE_USER_URL,
         });
     }
 });
 
 app.get('/manage_user',checkAuthenticated, get_file_list, function(req, res){
     res.render('main', {
-        files: req.file_list
+        files: req.file_list,
+        admin: true,
+        first_name: req.user.first_name,
+        last_name: req.user.last_name,
+        moment: moment
     });
 })
 
@@ -103,7 +110,6 @@ function get_user_list(req, res, next){
             var user_list = JSON.parse(JSON.stringify(result))
             req.user_list = user_list;
             next()
-            
         }
     });
 }

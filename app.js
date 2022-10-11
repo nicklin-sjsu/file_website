@@ -43,14 +43,43 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/', checkAuthenticated, function (req, res) {
+app.get('/', checkAuthenticated, get_file_list, function (req, res) {
+    console.log(req.user.id);
+    // var target_files = get_file_list(req.user.id);
+    console.log(req.file_list);
     res.render('main', {
         theme: process.env.THEME || theme,
         flask_debug: process.env.FLASK_DEBUG || 'false',
         first_name: req.user.first_name,
         last_name: req.user.last_name,
+        files: req.file_list
     });
 });
+
+function get_file_list(req, res, next){
+    var sql = mysql.format('SELECT * FROM files where user_id = ?'
+    , [req.user.id]
+    );
+    
+    con.query(sql,function (err, result) {
+        // console.log(result);
+        if (err) {
+            console.log('Something Wrong');
+        }
+        else{
+            var file_list = JSON.parse(JSON.stringify(result))
+            // console.log(data);
+            console.log(file_list)
+            req.file_list = file_list;
+            console.log(req.file_list);
+            next()
+            
+        }
+    });
+}
+
+
+
 
 app.get('/sso', checkNotAuthenticated, function (req, res) {
     res.render('sso', {

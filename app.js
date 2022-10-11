@@ -71,9 +71,6 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 app.get('/', checkAuthenticated, get_file_list, get_user_list, function (req, res) {
-    // console.log(req.user.id, "app get print");
-    // var target_files = get_file_list(req.user.id);
-    // console.log(req.file_list);
     if (req.user.type == 1){
         res.render('main', {
             theme: process.env.THEME || theme,
@@ -96,7 +93,6 @@ app.get('/', checkAuthenticated, get_file_list, get_user_list, function (req, re
 });
 
 app.get('/manage_user',checkAuthenticated, get_file_list, function(req, res){
-    // console.log("mange user called");
     res.render('main', {
         theme: process.env.THEME || theme,
         flask_debug: process.env.FLASK_DEBUG || 'false',
@@ -106,37 +102,22 @@ app.get('/manage_user',checkAuthenticated, get_file_list, function(req, res){
     });
 })
 
-// app.post('/admin_user', checkAuthenticated, get_file_list, function(req, res){
-//     console.log(req.body.user_id, "admin print");
-//     res.render('main', {
-//         theme: process.env.THEME || theme,
-//         flask_debug: process.env.FLASK_DEBUG || 'false',
-//         first_name: req.user.first_name,
-//         last_name: req.user.last_name,
-//         files: req.file_list
-//     });
-
-// })
-
 function get_user_list(req, res, next){
     var sql = mysql.format('SELECT * FROM users');
 
     con.query(sql,function (err, result) {
-        // console.log(result);
         if (err) {
             console.log('Something Wrong');
         }
         else{
             var user_list = JSON.parse(JSON.stringify(result))
-            // console.log(data);
-            // console.log(user_list)
             req.user_list = user_list;
-            // console.log(req.user_list);
             next()
             
         }
     });
 }
+
 function get_file_list(req, res, next){
     var sql;
     const url = require('url');
@@ -163,7 +144,6 @@ function get_file_list(req, res, next){
             var file_list = JSON.parse(JSON.stringify(result))
             console.log(file_list)
             req.file_list = file_list;
-            // console.log(req.file_list);
             next()
             
         }
@@ -277,37 +257,6 @@ app.post('/signup', checkNotAuthenticated, function (req, res) {
     } catch {
         res.redirect('/register');
     }
-    // ddb.putItem({
-    //     'TableName': ddbTable,
-    //     'Item': item,
-    //     'Expected': { email: { Exists: false } }
-    // }, function(err, data) {
-    //     if (err) {
-    //         var returnStatus = 500;
-
-    //         if (err.code === 'ConditionalCheckFailedException') {
-    //             returnStatus = 409;
-    //         }
-
-    //         res.status(returnStatus).end();
-    //         console.log('DDB Error: ' + err);
-    //     } else {
-    //         sns.publish({
-    //             'Message': 'Name: ' + req.body.name + '\r\nEmail: ' + req.body.email
-    //                                 + '\r\nPreviewAccess: ' + req.body.previewAccess
-    //                                 + '\r\nTheme: ' + req.body.theme,
-    //             'Subject': 'New user sign up!!!',
-    //             'TopicArn': snsTopic
-    //         }, function(err, data) {
-    //             if (err) {
-    //                 res.status(500).end();
-    //                 console.log('SNS Error: ' + err);
-    //             } else {
-    //                 res.status(201).end();
-    //             }
-    //         });
-    //     }
-    // });
 });
 
 app.post('/signout', checkAuthenticated, function (req, res, next) {

@@ -13,6 +13,7 @@ const flash = require('express-flash');
 const session = require('express-session');
 const methodOverride = require('method-override');
 const con = require('./db_connect.js');
+const { get } = require('http');
 const app = express();
 
 var theme = 'slate';
@@ -24,13 +25,39 @@ dotenv.config({
     path: path.resolve(__dirname, `.env.${process.env.NODE_ENV}`)
 });
 
+AWS.config.update({
+    region: 'us-west-2',
+    apiVersion: 'latest',
+    credentials: {
+        accessKeyId: process.env.AWS_ACCESS_KEY,
+        secretAccessKey: process.env.AWS_SECRET_KEY
+    }
+});
+
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/public');
 app.use(methodOverride('_method'))
 app.use(express.static(__dirname + '/public/img'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-AWS.config.region = process.env.REGION
+
+function sns_message(message) {
+    var params = {
+        Message: message,
+        TopicArn: process.env.TOPIC_ARN
+    };
+
+    var publishTextPromise = new AWS.SNS({ apiVersion: '2010-03-31' }).publish(params).promise();
+
+    publishTextPromise
+    .then(function (data) {
+        console.log(`Message ${params.Message} sent to the topic ${params.TopicArn}`);
+        console.log("MessageID is " + data.MessageId);
+    })
+    .catch(function (err) {
+        console.error(err, err.stack);
+    });
+}
 
 initializePassport(passport);
 
@@ -128,9 +155,9 @@ function get_file_list(req, res, next){
     }   
 
     con.query(sql,function (err, result) {
-        // console.log(result);
         if (err) {
-            console.log('Something Wrong');
+            sns_message("get_file_list failed with user_id = " + req.user.id + ": " + err);
+            console.log(err);
         }
         else{
             var file_list = JSON.parse(JSON.stringify(result))
@@ -142,9 +169,6 @@ function get_file_list(req, res, next){
         }
     });
 }
-
-
-
 
 app.get('/sso', checkNotAuthenticated, function (req, res) {
     res.render('sso', {

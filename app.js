@@ -33,6 +33,24 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 AWS.config.region = process.env.REGION
 
+function sns_message(message) {
+    var params = {
+        Message: message,
+        TopicArn: process.env.TOPIC_ARN
+    };
+
+    var publishTextPromise = new AWS.SNS({ apiVersion: '2010-03-31' }).publish(params).promise();
+
+    publishTextPromise
+    .then(function (data) {
+        console.log(`Message ${params.Message} sent to the topic ${params.TopicArn}`);
+        console.log("MessageID is " + data.MessageId);
+    })
+    .catch(function (err) {
+        console.error(err, err.stack);
+    });
+}
+
 initializePassport(passport);
 
 app.use(flash());
@@ -44,10 +62,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+sns_message("Test sns");
+
 app.get('/', checkAuthenticated, get_file_list, function (req, res) {
-    console.log(req.user.id);
-    // var target_files = get_file_list(req.user.id);
-    console.log(req.file_list);
     res.render('main', {
         theme: process.env.THEME || theme,
         flask_debug: process.env.FLASK_DEBUG || 'false',
@@ -61,15 +78,13 @@ function get_file_list(req, res, next){
     var sql = mysql.format('SELECT * FROM files where user_id = ?'
     , [req.user.id]
     );
-    
     con.query(sql,function (err, result) {
-        // console.log(result);
         if (err) {
-            console.log('Something Wrong');
+            sns_message("get_file_list failed with user_id = " + req.user.id + ": " + err);
+            console.log(err);
         }
         else{
             var file_list = JSON.parse(JSON.stringify(result))
-            // console.log(data);
             console.log(file_list)
             req.file_list = file_list;
             console.log(req.file_list);
@@ -78,9 +93,6 @@ function get_file_list(req, res, next){
         }
     });
 }
-
-
-
 
 app.get('/sso', checkNotAuthenticated, function (req, res) {
     res.render('sso', {

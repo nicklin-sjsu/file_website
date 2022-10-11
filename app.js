@@ -43,10 +43,33 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.get('/', checkAuthenticated, get_file_list, function (req, res) {
-    console.log(req.user.id);
+app.get('/', checkAuthenticated, get_file_list, get_user_list, function (req, res) {
+    // console.log(req.user.id, "app get print");
     // var target_files = get_file_list(req.user.id);
-    console.log(req.file_list);
+    // console.log(req.file_list);
+    if (req.user.type == 1){
+        res.render('main', {
+            theme: process.env.THEME || theme,
+            flask_debug: process.env.FLASK_DEBUG || 'false',
+            first_name: req.user.first_name,
+            last_name: req.user.last_name,
+            files: req.file_list
+        });
+    }
+    else if(req.user.type == 0 || req.user.type == null){
+        res.render('admin', {
+            theme: process.env.THEME || theme,
+            flask_debug: process.env.FLASK_DEBUG || 'false',
+            first_name: req.user.first_name,
+            last_name: req.user.last_name,
+            users: req.user_list
+        });
+
+    }
+});
+
+app.get('/manage_user',checkAuthenticated, get_file_list, function(req, res){
+    // console.log("mange user called");
     res.render('main', {
         theme: process.env.THEME || theme,
         flask_debug: process.env.FLASK_DEBUG || 'false',
@@ -54,13 +77,56 @@ app.get('/', checkAuthenticated, get_file_list, function (req, res) {
         last_name: req.user.last_name,
         files: req.file_list
     });
-});
+})
 
+// app.post('/admin_user', checkAuthenticated, get_file_list, function(req, res){
+//     console.log(req.body.user_id, "admin print");
+//     res.render('main', {
+//         theme: process.env.THEME || theme,
+//         flask_debug: process.env.FLASK_DEBUG || 'false',
+//         first_name: req.user.first_name,
+//         last_name: req.user.last_name,
+//         files: req.file_list
+//     });
+
+// })
+
+function get_user_list(req, res, next){
+    var sql = mysql.format('SELECT * FROM users');
+
+    con.query(sql,function (err, result) {
+        // console.log(result);
+        if (err) {
+            console.log('Something Wrong');
+        }
+        else{
+            var user_list = JSON.parse(JSON.stringify(result))
+            // console.log(data);
+            // console.log(user_list)
+            req.user_list = user_list;
+            // console.log(req.user_list);
+            next()
+            
+        }
+    });
+}
 function get_file_list(req, res, next){
-    var sql = mysql.format('SELECT * FROM files where user_id = ?'
-    , [req.user.id]
-    );
-    
+    var sql;
+    const url = require('url');
+    const queryObject = url.parse(req.url, true).query;
+    console.log(queryObject);
+    if (queryObject.user_id != null){
+        console.log("req body", queryObject.user_id);
+        sql = mysql.format('SELECT * FROM files where user_id = ?'
+        , [queryObject.user_id]
+        );
+    } else{
+        console.log(req.user.id, "getfile print");
+        sql = mysql.format('SELECT * FROM files where user_id = ?'
+        , [req.user.id]
+        );
+    }   
+
     con.query(sql,function (err, result) {
         // console.log(result);
         if (err) {
@@ -68,10 +134,9 @@ function get_file_list(req, res, next){
         }
         else{
             var file_list = JSON.parse(JSON.stringify(result))
-            // console.log(data);
             console.log(file_list)
             req.file_list = file_list;
-            console.log(req.file_list);
+            // console.log(req.file_list);
             next()
             
         }

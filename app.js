@@ -74,31 +74,19 @@ app.use(passport.session());
 app.get('/', checkAuthenticated, get_file_list, get_user_list, function (req, res) {
     if (req.user.type == 1){
         res.render('main', {
-            theme: process.env.THEME || theme,
-            flask_debug: process.env.FLASK_DEBUG || 'false',
-            first_name: req.user.first_name,
-            last_name: req.user.last_name,
             files: req.file_list
         });
     }
     else if(req.user.type == 0 || req.user.type == null){
         res.render('admin', {
-            theme: process.env.THEME || theme,
-            flask_debug: process.env.FLASK_DEBUG || 'false',
-            first_name: req.user.first_name,
-            last_name: req.user.last_name,
-            users: req.user_list
+            users: req.user_list,
+            manage_user_url: process.env.MANAGE_USER_URL
         });
-
     }
 });
 
 app.get('/manage_user',checkAuthenticated, get_file_list, function(req, res){
     res.render('main', {
-        theme: process.env.THEME || theme,
-        flask_debug: process.env.FLASK_DEBUG || 'false',
-        first_name: req.user.first_name,
-        last_name: req.user.last_name,
         files: req.file_list
     });
 })
@@ -152,10 +140,7 @@ function get_file_list(req, res, next){
 }
 
 app.get('/sso', checkNotAuthenticated, function (req, res) {
-    res.render('sso', {
-        theme: process.env.THEME || theme,
-        flask_debug: process.env.FLASK_DEBUG || 'false'
-    });
+    res.render('sso');
 });
 
 app.post('/upload_file', checkAuthenticated, function (req, res) {

@@ -83,7 +83,7 @@
 									</td>
 									<td><%=user.email %></td>
 									<td>
-										<a href = 'http://127.0.0.1:3000/manage_user?user_id=<%=user.id %>' ><button type="button" class="btn btn-outline-info btn-circle btn-lg btn-circle" );"> <i class="bi bi-person-workspace"></i> View Files</button></a>
+										<a href = '<%=manage_user_rul + user.id %>' ><button type="button" class="btn btn-outline-info btn-circle btn-lg btn-circle" );"> <i class="bi bi-person-workspace"></i> View Files</button></a>
 									</td>
 								</tr>
 								<%  i++; }) %>

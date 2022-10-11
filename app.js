@@ -25,13 +25,20 @@ dotenv.config({
     path: path.resolve(__dirname, `.env.${process.env.NODE_ENV}`)
 });
 
+const SESConfig = {
+    apiVersion: "2010-12-01",
+    accessKeyId: process.env.AWS_ACCESS_KEY,
+    accessSecretKey: process.env.AWS_SECRET_KEY,
+    region: "us-west-2"
+}
+
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/public');
 app.use(methodOverride('_method'))
 app.use(express.static(__dirname + '/public/img'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
-AWS.config.region = process.env.REGION
+AWS.config.update(SESConfig);
 
 function sns_message(message) {
     var params = {

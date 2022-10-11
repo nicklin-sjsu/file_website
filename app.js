@@ -13,7 +13,7 @@ const flash = require('express-flash');
 const session = require('express-session');
 const methodOverride = require('method-override');
 const con = require('./db_connect.js');
-const { get } = require('http');
+const url = require('url');
 const app = express();
 
 var theme = 'slate';
@@ -42,22 +42,23 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(bodyParser.json());
 
 function sns_message(message) {
-    var params = {
-        Message: message,
-        TopicArn: process.env.TOPIC_ARN,
-        MessageGroupId: 'product-214'
-    };
-
-    var publishTextPromise = new AWS.SNS({ apiVersion: '2010-03-31' }).publish(params).promise();
-
-    publishTextPromise
-    .then(function (data) {
-        console.log(`Message ${params.Message} sent to the topic ${params.TopicArn}`);
-        console.log("MessageID is " + data.MessageId);
-    })
-    .catch(function (err) {
-        console.error(err, err.stack);
-    });
+    if (process.env.NODE_ENV == 'production') {
+        var params = {
+            Message: message,
+            TopicArn: process.env.TOPIC_ARN,
+            MessageGroupId: 'product-214'
+        };
+        var publishTextPromise = new AWS.SNS({ apiVersion: '2010-03-31' }).publish(params).promise();
+        publishTextPromise
+            .then(function (data) {
+                console.log(`Message ${params.Message} sent to the topic ${params.TopicArn}`);
+                console.log("MessageID is " + data.MessageId);
+            })
+            .catch(function (err) {
+                console.error(err, err.stack);
+            });
+    }
+    console.log(message);
 }
 
 initializePassport(passport);
@@ -108,21 +109,14 @@ function get_user_list(req, res, next){
 }
 
 function get_file_list(req, res, next){
-    var sql;
-    const url = require('url');
+    var user_id;
     const queryObject = url.parse(req.url, true).query;
-    console.log(queryObject);
     if (queryObject.user_id != null){
-        console.log("req body", queryObject.user_id);
-        sql = mysql.format('SELECT * FROM files where user_id = ?'
-        , [queryObject.user_id]
-        );
+        user_id = queryObject.user_id;
     } else{
-        console.log(req.user.id, "getfile print");
-        sql = mysql.format('SELECT * FROM files where user_id = ?'
-        , [req.user.id]
-        );
+        user_id = req.user.id;
     }   
+    var sql = mysql.format('SELECT * FROM files where user_id = ?', [user_id]);
 
     con.query(sql,function (err, result) {
         if (err) {
@@ -131,10 +125,8 @@ function get_file_list(req, res, next){
         }
         else{
             var file_list = JSON.parse(JSON.stringify(result))
-            console.log(file_list)
             req.file_list = file_list;
-            next()
-            
+            next();
         }
     });
 }

@@ -149,24 +149,27 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
         var fields_list = Object.entries(fields);
         var files_list = Object.entries(files);
         var file = files_list['file'];
-        var file_name = fields_list['file_name'];
-        var description = fields_list['description'];
+        var description = fields_list[1]['description'];
+        var file_name = fields_list[0]['file_name'];
 
         var sql1 = mysql.format('SELECT * FROM files WHERE user_id = ? AND file_key = ?', [user_id, file_name]);
+        console.log(sql1);
         con.query(sql1, function (err, result) {
             if (result.length > 0) {
                 res.send({ 'code': 400, 'message': 'file with same name exists, please use another name' });
             } else {
                 var params = {
-                    Body: files_list['file'],
+                    Body: file,
                     Bucket: 'fileweb-aws-s3',
                     Key: user_id + "/" + file_name
                 };
                 s3.putObject(params, function (err, data) {
                     if (err) console.log(err, err.stack);
                     else {
+                        console.log(file_name + " uploaded");
                         var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)',
                             [user_id, file_name, description]);
+                        console.log(sql);
                         con.query(sql, function (err, result) {
                             if (err) {
                                 res.send({ 'code': 400, 'message': 'information error' });

@@ -16,9 +16,7 @@ const con = require('./db_connect.js');
 const url = require('url');
 const moment = require("moment");
 const app = express();
-const s3 = new AWS.S3();
 
-var theme = 'slate';
 const port = process.env.PORT || 3000;
 //var snsTopic = process.env.NEW_SIGNUP_TOPIC;
 const lambda_url = process.env.LAMBDA_URL || 'https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/';
@@ -35,6 +33,7 @@ AWS.config.update({
         secretAccessKey: process.env.AWS_SECRET_KEY
     }
 });
+const s3 = new AWS.S3();
 
 app.set('view engine', 'ejs');
 app.set('views', __dirname + '/public');
@@ -154,25 +153,32 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
                 
             let file_name = file.originalFilename;
             var file_key = user_id + '/' + file_name;
-            var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)', 
-            [user_id, file_name, description]);
-            con.query(sql, function (err, result) {
-                if (err) {
-                    res.send({ 'code': 400, 'message': 'Information error' });
-                }
-                console.log('Row added to TABLE files');
-                request.post(
-                    lambda_url + 'file/' + file_key,
-                    { file },
-                    function (error, response, body) {
-                        if (!error && response.statusCode == 200) {
-                            res.send({ 'code': 200, 'message': 'Upload Successfully' });
-                        } else {
-                            console.log(error);
+            var sql1 = mysql.format('SELECT * FROM files WHERE user_id = ? AND file_key = ?', [user_id, file_name]);
+            con.query(sql1, function (err, result) {
+                if (result.length > 0) {
+                    res.send({ 'code': 400, 'message': 'File with same name exists, please use another name' });
+                } else {
+                    var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)',
+                        [user_id, file_name, description]);
+                    con.query(sql, function (err, result) {
+                        if (err) {
+                            res.send({ 'code': 400, 'message': 'Information error' });
                         }
-                    }
-                );
-            });
+                        console.log('Row added to TABLE files');
+                        request.post(
+                            lambda_url + 'file/' + file_key,
+                            { file },
+                            function (error, response, body) {
+                                if (!error && response.statusCode == 200) {
+                                    res.send({ 'code': 200, 'message': 'Upload Successfully' });
+                                } else {
+                                    console.log(error);
+                                }
+                            }
+                        );
+                    });
+                }
+            })
         }
     });
 });
@@ -192,7 +198,6 @@ app.get('/get_file', checkAuthenticated, function (req, res) {
             res.send({ 'code': 401, 'message': 'Information error' });
         }
         if (result.length > 0) {
-            var s3 = new AWS.S3();
             var options = {
                 Bucket: 'fileweb-aws-s3',
                 Key: user_id + "/" + file_key,

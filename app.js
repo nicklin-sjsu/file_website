@@ -16,6 +16,7 @@ const con = require('./db_connect.js');
 const url = require('url');
 const moment = require("moment");
 const app = express();
+const s3 = new AWS.S3();
 
 var theme = 'slate';
 const port = process.env.PORT || 3000;
@@ -95,6 +96,7 @@ app.get('/manage_user',checkAuthenticated, get_file_list, function(req, res){
         admin: true,
         first_name: req.user.first_name,
         last_name: req.user.last_name,
+        user_id: req.user.id,
         moment: moment
     });
 })
@@ -116,9 +118,8 @@ function get_user_list(req, res, next){
 
 function get_file_list(req, res, next){
     var user_id;
-    const queryObject = url.parse(req.url, true).query;
-    if (queryObject.user_id != null){
-        user_id = queryObject.user_id;
+    if (req.query.user_id != null){
+        user_id = req.query.user_id;
     } else{
         user_id = req.user.id;
     }   
@@ -176,31 +177,72 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
     });
 });
 
-app.post('/get_file', checkAuthenticated, function (req, res) {
-    let user_id = req.user.id;
-    var file_key = req.body.file_key;
+app.get('/get_file', checkAuthenticated, function (req, res) {
+    var file_key = req.query.file_key;
+    var user_id = req.user.id;
+    if (req.query.user_id != null && req.user.type == 0) {
+        user_id = req.query.user_id;
+    }
 
-    var sql = mysql.format('SELECT * FROM files WHERE file_key = ? and user_id = ?)',
+    var sql = mysql.format('SELECT * FROM files WHERE file_key = ? and user_id = ?;',
+        [file_key, user_id]);
+    console.log(sql);
+    con.query(sql, function (err, result) {
+        if (err) {
+            res.send({ 'code': 401, 'message': 'Information error' });
+        }
+        if (result.length > 0) {
+            var s3 = new AWS.S3();
+            var options = {
+                Bucket: 'fileweb-aws-s3',
+                Key: user_id + "/" + file_key,
+            };
+            res.attachment(file_key);
+            var fileStream = s3.getObject(options).createReadStream();
+            fileStream.pipe(res);
+        } else {
+            res.send({ 'code': 402, 'message': 'No such file existed' });
+        }
+    });
+});
+
+app.post('/del_file', checkAuthenticated, function (req, res) {
+    var file_key = req.body.file_key;
+    var user_id = req.user.id;
+    if (req.body.user_id != null && req.body.type == 0) {
+        user_id = req.body.user_id;
+    }
+
+    var sql = mysql.format('SELECT * FROM files WHERE file_key = ? and user_id = ?;',
         [file_key, user_id]);
     con.query(sql, function (err, result) {
         if (err) {
             res.send({ 'code': 400, 'message': 'Information error' });
         }
         if (result.length > 0) {
-            request.post(
-                lambda_url + 'get_file/' + file_key,
-                function (error, response, body) {
-                    if (!error && response.statusCode == 200) {
-                        res.send({ 'code': 200, 'message': 'Get file successfully', 'data': response.data });
-                    } else {
-                        console.log(error);
-                    }
+            var params = { Bucket: 'fileweb-aws-s3', Key: user_id + "/" + file_key };
+
+            s3.deleteObject(params, function (err, data) {
+                if (err) console.log(err, err.stack);
+                else {
+                    var sql = mysql.format('DELETE FROM files WHERE file_key = ? and user_id = ?;',
+                        [file_key, user_id]);
+                    con.query(sql, function (err, result) {
+                        if (err) {
+                            res.send({ 'code': 400, 'message': 'Information error' });
+                        } else {
+                            console.log("delete");
+                            res.send({ 'code': 200, 'message': 'File <' + file_key + '> deleted' });
+                        }
+                    })
                 }
-            );
+            });
         } else {
             res.send({ 'code': 400, 'message': 'No such file existed' });
         }
     });
+
+    
 });
 
 app.post('/signin', checkNotAuthenticated, passport.authenticate('local', {

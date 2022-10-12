@@ -82,15 +82,27 @@
 								<td><span class="text-muted"><%=moment(file.upload_time).format('MM/DD/YYYY hh:mm:ss') %></span></td>
 								<td><span class="text-muted"><%=moment(file.updatetime).format('MM/DD/YYYY hh:mm:ss') %></span></td>
 								<td>
-									<button type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Download">
+									<% if (admin) { %>
+									<button onclick="location.href='/get_file?file_key=<%=file.file_key%>&user_id=<%=user_id%>'" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Download">
 										<i class="bi bi-cloud-download-fill"></i>
 									</button>
 									<button type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Update">
 										<i class="bi bi-arrow-repeat"></i>
 									</button>
-									<button type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Delete">
+									<button onclick="del_file(file.file_key, `<%=user_id%>`);" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Delete">
 										<i class="bi bi-trash3-fill"></i>
 									</button>
+									<% } else { %>
+									<button onclick="location.href='/get_file?file_key=<%=file.file_key%>'" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Download">
+										<i class="bi bi-cloud-download-fill"></i>
+									</button>
+									<button type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Update">
+										<i class="bi bi-arrow-repeat"></i>
+									</button>
+									<button onclick="del_file(`<%=file.file_key%>`, null);" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Delete">
+										<i class="bi bi-trash3-fill"></i>
+									</button>
+									<% } %>
 								</td>
 							</tr>
 							<% i++; %>
@@ -139,14 +151,35 @@
 					console.error('Error:', error);
 				});
 		}
+		function del_file(file_key, user_id) {
+            fetch("/del_file", {
+				method: "POST",
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({
+					file_key: file_key,
+					user_id: user_id
+				})
+			})
+				.then((result) => result.json())
+                .then((result) => {
+                    console.log(result);
+                    if (result.code == 200) {
+                        alert(result.message);
+					} else {
+                        alert(result.message);
+					}
+                }).catch(console.error);
+        }
+
 		function signout() {
 			fetch("/signout", {
 				method: "POST",
 				headers: {
 					'Content-Type': 'application/json'
 				},
-			})
-				.finally(location.reload());
+			}).finally(location.reload());
 		}
 	</script>
 </body>

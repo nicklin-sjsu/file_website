@@ -144,43 +144,78 @@ app.get('/sso', checkNotAuthenticated, function (req, res) {
 app.post('/upload_file', checkAuthenticated, function (req, res) {
     let user_id = req.user.id;
     const form = formidable({ multiples: true });
-    form.parse(req, (err, fields, files) => {
-        var fields_list = Object.entries(fields);
-        var files_list = Object.entries(files);
-        for (let i = 0; i < files_list.length; i++) {
-            var [filed_key, description] = fields_list[i];
-            const [key, file] = files_list[i];
-                
-            let file_name = file.originalFilename;
-            var file_key = user_id + '/' + file_name;
-            var sql1 = mysql.format('SELECT * FROM files WHERE user_id = ? AND file_key = ?', [user_id, file_name]);
-            con.query(sql1, function (err, result) {
-                if (result.length > 0) {
-                    res.send({ 'code': 400, 'message': 'File with same name exists, please use another name' });
-                } else {
-                    var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)',
-                        [user_id, file_name, description]);
-                    con.query(sql, function (err, result) {
-                        if (err) {
-                            res.send({ 'code': 400, 'message': 'Information error' });
-                        }
-                        console.log('Row added to TABLE files');
-                        request.post(
-                            lambda_url + 'file/' + file_key,
-                            { file },
-                            function (error, response, body) {
-                                if (!error && response.statusCode == 200) {
-                                    res.send({ 'code': 200, 'message': 'Upload Successfully' });
-                                } else {
-                                    console.log(error);
-                                }
-                            }
-                        );
-                    });
-                }
-            })
+    request.post(
+        lambda_url + 'file/' + 'qwe.txt',
+        app.body,
+        function (error, response, body) {
+            if (!error && response.statusCode == 200) {
+                console.log("success");
+                //var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)',
+                //    [user_id, file_name, description]);
+                //con.query(sql, function (err, result) {
+                //    if (err) {
+                //        res.send({ 'code': 400, 'message': 'Information error' });
+                //    } else {
+                //        res.send({ 'code': 200, 'message': 'Upload Successfully' });
+                //    }
+                //});
+
+            } else {
+                console.log(error);
+            }
         }
-    });
+    );
+    //form.parse(req, (err, fields, files) => {
+        //var fields_list = Object.entries(fields);
+        //var files_list = Object.entries(files);
+        //for (let i = 0; i < files_list.length; i++) {
+        //    var [filed_key, description] = fields_list[i];
+        //    const [key, file] = files_list[i];
+        //    fs = require('fs')
+        //    fs.readFile(file, 'utf8', function (err, data) {
+        //        if (err) {
+        //            return console.log(err);
+        //        }
+        //        console.log(data);
+        //    });
+                
+        //    let file_name = file.originalFilename;
+        //    var file_key = user_id + '/' + file_name;
+        //    var sql1 = mysql.format('SELECT * FROM files WHERE user_id = ? AND file_key = ?', [user_id, file_name]);
+        //    con.query(sql1, function (err, result) {
+        //        if (result.length > 0) {
+        //            res.send({ 'code': 400, 'message': 'File with same name exists, please use another name' });
+        //        } else {
+        //            fs.readFile(file, 'utf8', function (err, data) {
+        //                if (err) {
+        //                    res.send({ 'code': 400, 'message': 'Information error' });
+        //                } else {
+        //                    request.post(
+        //                        lambda_url + 'file/' + file_key,
+        //                        new Blob([data], { type: file.mimetype }),
+        //                        function (error, response, body) {
+        //                            if (!error && response.statusCode == 200) {
+        //                                var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)',
+        //                                    [user_id, file_name, description]);
+        //                                con.query(sql, function (err, result) {
+        //                                    if (err) {
+        //                                        res.send({ 'code': 400, 'message': 'Information error' });
+        //                                    } else {
+        //                                        res.send({ 'code': 200, 'message': 'Upload Successfully' });
+        //                                    }
+        //                                });
+
+        //                            } else {
+        //                                console.log(error);
+        //                            }
+        //                        }
+        //                    );
+        //                }
+        //            });
+        //        }
+        //    })
+        //}
+    //});
 });
 
 app.get('/get_file', checkAuthenticated, function (req, res) {

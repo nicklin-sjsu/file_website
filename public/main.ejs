@@ -83,13 +83,13 @@
 								<td><span class="text-muted"><%=moment(file.updatetime).format('MM/DD/YYYY hh:mm:ss') %></span></td>
 								<td>
 									<% if (admin) { %>
-									<button onclick="location.href='/get_file?file_key=<%=file.file_key%>&user_id=<%=user_id%>'" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Download">
+									<button onclick="location.href='/get_file?file_key=<%=file.file_key%>&user_id=<%=file.user_id%>'" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Download">
 										<i class="bi bi-cloud-download-fill"></i>
 									</button>
 									<button type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Update">
 										<i class="bi bi-arrow-repeat"></i>
 									</button>
-									<button onclick="del_file(file.file_key, `<%=user_id%>`);" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Delete">
+									<button onclick="del_file(file.file_key, `<%=file.user_id%>`);" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Delete">
 										<i class="bi bi-trash3-fill"></i>
 									</button>
 									<% } else { %>

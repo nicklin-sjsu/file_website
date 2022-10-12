@@ -27,7 +27,7 @@ dotenv.config({
 });
 
 AWS.config.update({
-    region: 'us-west-2',
+    region: 'us-west-1',
     apiVersion: 'latest',
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -149,8 +149,8 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
         var fields_list = Object.entries(fields);
         var files_list = Object.entries(files);
         var file = files_list['file'];
-        var description = fields_list[1]['description'];
-        var file_name = fields_list[0]['file_name'];
+        var description = fields_list[0][1];
+        var file_name = fields_list[1][1];
 
         var sql1 = mysql.format('SELECT * FROM files WHERE user_id = ? AND file_key = ?', [user_id, file_name]);
         console.log(sql1);

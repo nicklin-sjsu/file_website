@@ -47,17 +47,19 @@
 					<div class="col-sm">
 						<label class="form-label">Upload New Files</label>
 						<div class="input-group mb-3">
-							<input class="form-control" type="file" id="formFile" multiple>
+							<input class="form-control" type="file" name="form_file" id="form_file">
 						</div>
 					</div>
+
 					<div class="col-sm">
 						<label class="form-label">Description: </label>
 						<div>
 							<input type="text" class="form-control mb-2" id="description" name="description" rows="4" cols="50">
 						</div>
 					</div>
-					<p><a class="btn btn-primary" data-toggle="modal" onclick="uploadFile();" multiple>Upload</a></p>
+					<p><button class="btn btn-primary" data-toggle="modal" onclick="upload_file();">Upload</button></p>
 				</div>
+
 				<% } %>
 
 				<div class="table-responsive p-2">
@@ -123,32 +125,55 @@
 		$(document).ready(function () {
 			$('[data-toggle="tooltip"]').tooltip();
 		});
-		function uploadFile() {
+
+		function upload_file() {
 			if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
 				alert('The File APIs are not fully supported in this browser.');
 				return;
 			}
-            const input = document.getElementById('formFile');
-            let files = input.files;
-            for (let i = 0; i < files.length; i++) {
-                let file = files[i];
-                let reader = new FileReader();
-                reader.addEventListener('loadend', function (e) {
-                    fetch('https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/' + file.name, {
-                        method: "POST",
-						body: new Blob([reader.result], { type: file.type }),
-						mode: "cors"
-                    })
-                        .then((response) => {
-                            if (response.ok) {
-								alert("ok");
-                            } else {
-                                alert('Error uploading [' + file.name + ']. Max upload size is ~4MB.');
-                            }
-                        });
-                });
-                reader.readAsArrayBuffer(file);
+            const formData = new FormData();
+
+            var description = document.getElementById('description').value;
+			const files = document.getElementById('form_file').files;
+			if (files.length > 0) {
+				var file = files[0];
+                formData.append('file', file);
+                formData.append('description', description);
+                fetch('/upload_file', {
+                    method: "POST",
+                    body: formData,
+                })
+                    .then((response) => {
+                        if (response.ok) {
+                            alert("ok");
+                        } else {
+                            alert('Error uploading [' + file.name + ']. Max upload size is ~4MB.');
+                        }
+                    });
+			} else {
+				alert("Please select your file");
             }
+			
+      //      let files = input.files;
+      //      for (let i = 0; i < files.length; i++) {
+      //          let file = files[i];
+      //          let reader = new FileReader();
+      //          reader.addEventListener('loadend', function (e) {
+      //              fetch('https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/' + file.name, {
+      //                  method: "POST",
+						//body: new Blob([reader.result], { type: file.type }),
+						//mode: "cors"
+      //              })
+      //                  .then((response) => {
+      //                      if (response.ok) {
+						//		alert("ok");
+      //                      } else {
+      //                          alert('Error uploading [' + file.name + ']. Max upload size is ~4MB.');
+      //                      }
+      //                  });
+      //          });
+      //          reader.readAsArrayBuffer(file);
+      //      }
 			//const formData = new FormData();
 			//const input = document.getElementById('formFile');
 			//var files = input.files;

@@ -15,6 +15,7 @@ const methodOverride = require('method-override');
 const con = require('./db_connect.js');
 const url = require('url');
 const moment = require("moment");
+const multiparty = require("multiparty");
 const app = express();
 
 const port = process.env.PORT || 3000;
@@ -142,29 +143,60 @@ app.get('/sso', checkNotAuthenticated, function (req, res) {
 });
 
 app.post('/upload_file', checkAuthenticated, function (req, res) {
-    let user_id = req.user.id;
-    const form = formidable({ multiples: true });
-    request.post(
-        lambda_url + 'file/' + 'qwe.txt',
-        app.body,
-        function (error, response, body) {
-            if (!error && response.statusCode == 200) {
-                console.log("success");
-                //var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)',
-                //    [user_id, file_name, description]);
-                //con.query(sql, function (err, result) {
-                //    if (err) {
-                //        res.send({ 'code': 400, 'message': 'Information error' });
-                //    } else {
-                //        res.send({ 'code': 200, 'message': 'Upload Successfully' });
-                //    }
-                //});
+    console.log(req);
+    var user_id = req.user.id;
+    var form = new multiparty.Form();
+    form.parse(req, (err, fields, files) => {
+        var fields_list = Object.entries(fields);
+        var files_list = Object.entries(files);
+        var file = files_list['file'].file_name;
+        var file_name = file.originalFilename
 
-            } else {
-                console.log(error);
-            }
-        }
-    );
+        var params = {
+            Body: files_list['file'],
+            Bucket: 'fileweb-aws-s3',
+            Key: user_id + "/" + file_name;
+        };
+        s3.putObject(params, function (err, data) {
+            if (err) console.log(err, err.stack);
+            else console.log(data);
+
+        });
+    });
+    
+        //for (let i = 0; i < files_list.length; i++) {
+        //    var [filed_key, description] = fields_list[i];
+        //    const [key, file] = files_list[i];
+        //    fs = require('fs')
+        //    fs.readFile(file, 'utf8', function (err, data) {
+        //        if (err) {
+        //            return console.log(err);
+        //        }
+        //        console.log(data);
+        //    });
+    //let user_id = req.user.id;
+    //const form = formidable({ multiples: true });
+    //request.post(
+    //    lambda_url + 'file/' + 'qwe.txt',
+    //    app.body,
+    //    function (error, response, body) {
+    //        if (!error && response.statusCode == 200) {
+    //            console.log("success");
+    //            //var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)',
+    //            //    [user_id, file_name, description]);
+    //            //con.query(sql, function (err, result) {
+    //            //    if (err) {
+    //            //        res.send({ 'code': 400, 'message': 'Information error' });
+    //            //    } else {
+    //            //        res.send({ 'code': 200, 'message': 'Upload Successfully' });
+    //            //    }
+    //            //});
+
+    //        } else {
+    //            console.log(error);
+    //        }
+    //    }
+    //);
     //form.parse(req, (err, fields, files) => {
         //var fields_list = Object.entries(fields);
         //var files_list = Object.entries(files);

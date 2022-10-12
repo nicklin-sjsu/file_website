@@ -23,6 +23,7 @@
     "formidable": "latest",
     "method-override": "^3.0.0",
     "moment": "^2.29.4",
+    "multiparty": "^4.2.3",
     "mysql": "latest",
     "passport": "latest",
     "passport-local": "latest",

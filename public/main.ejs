@@ -139,6 +139,7 @@
 				var file = files[0];
                 formData.append('file', file);
                 formData.append('description', description);
+                formData.append('file_name', file.name);
                 fetch('/upload_file', {
                     method: "POST",
                     body: formData,

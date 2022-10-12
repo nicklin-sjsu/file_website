@@ -192,7 +192,6 @@ app.get('/get_file', checkAuthenticated, function (req, res) {
 
     var sql = mysql.format('SELECT * FROM files WHERE file_key = ? and user_id = ?;',
         [file_key, user_id]);
-    console.log(sql);
     con.query(sql, function (err, result) {
         if (err) {
             res.send({ 'code': 401, 'message': 'Information error' });
@@ -236,7 +235,6 @@ app.post('/del_file', checkAuthenticated, function (req, res) {
                         if (err) {
                             res.send({ 'code': 400, 'message': 'Information error' });
                         } else {
-                            console.log("delete");
                             res.send({ 'code': 200, 'message': 'File <' + file_key + '> deleted' });
                         }
                     })

@@ -34,6 +34,7 @@
 		<div class="row mt-5">
 			<div class="col-md-12">
 				<div class="card p-2">
+					<div id="main-alert" class="" role="alert"></div>
 					<div class="card-body">
 						<% if (admin) { %>
 						<a href="/" style="text-decoration: none; color: black"><i class="bi bi-arrow-left-square-fill"> Back</i></a>
@@ -145,10 +146,15 @@
 			})
 				.then((response) => response.json())
 				.then((result) => {
-					console.log('Success:', result);
+					if (result.code == 200) {
+						show_alert(result.message, 'alert-success');
+						location.reload();
+					} else {
+                        show_alert(result.message, 'alert-danger');
+                    }
 				})
 				.catch((error) => {
-					console.error('Error:', error);
+                    show_alert(result.message, 'alert-danger');
 				});
 		}
 		function del_file(file_key, user_id) {
@@ -166,9 +172,10 @@
                 .then((result) => {
                     console.log(result);
                     if (result.code == 200) {
-                        alert(result.message);
+						show_alert(result.message, 'alert-success');
+                        location.reload();
 					} else {
-                        alert(result.message);
+                        show_alert(result.message, 'alert-danger');
 					}
                 }).catch(console.error);
         }
@@ -181,6 +188,13 @@
 				},
 			}).finally(location.reload());
 		}
+
+		function show_alert(message, alert_class) {
+			var main_alert = document.getElementById('main-alert');
+			main_alert.className = 'alert alert-dismissible fade m-3 text-center show';
+			main_alert.classList.add(alert_class);
+			main_alert.innerHTML = message;
+        }
 	</script>
 </body>
 </html>

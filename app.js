@@ -203,9 +203,9 @@ app.post('/update_file', checkAuthenticated, function (req, res) {
         s3.putObject(params, function (err, data) {
             if (err) console.log(err, err.stack);
             else {
-                console.log(file_name + " uploaded");
-                var sql = mysql.format('UPDATE files SET user_id = ?, WHERE user_id = ? AND file_name = ?',
-                    [user_id, user_id, file_name]);
+                console.log("User " + req.user.id + " updated " + file_name + " belonging to user " + user_id);
+                var sql = mysql.format('UPDATE files SET file_name = ?, WHERE user_id = ? AND file_name = ?',
+                    [file_name, user_id, file_name]);
                 con.query(sql, function (err, result) {
                     if (err) {
                         res.send({ 'code': 400, 'message': 'Internal update error' });

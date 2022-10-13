@@ -65,7 +65,7 @@ con.query(sql, function (err, result) {
 var sql = 
 "CREATE TABLE files (id INT NOT NULL AUTO_INCREMENT, user_id INT NOT NULL, file_key VARCHAR(255) NOT NULL, \
 description VARCHAR(255),\
-upload_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, updatetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, \
+upload_time TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP, updatetime TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP, \
 PRIMARY KEY (id), FOREIGN KEY (user_id) REFERENCES users(id))";
 con.query(sql, function (err, result) {
     if (err) throw err;

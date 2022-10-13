@@ -51,7 +51,6 @@
 							<input class="form-control" type="file" name="form_file" id="form_file">
 						</div>
 					</div>
-
 					<div class="col-sm">
 						<label class="form-label">Description: </label>
 						<div>
@@ -60,7 +59,6 @@
 					</div>
 					<p><button class="btn btn-primary" data-toggle="modal" onclick="upload_file();">Upload</button></p>
 				</div>
-
 				<% } %>
 
 				<div class="table-responsive p-2">
@@ -86,11 +84,14 @@
 								<td><span class="text-muted"><%=moment(file.upload_time).format('MM/DD/YYYY hh:mm:ss') %></span></td>
 								<td><span class="text-muted"><%=moment(file.updatetime).format('MM/DD/YYYY hh:mm:ss') %></span></td>
 								<td>
+									<input id="file-update" style="display: none" type="file" onchange="update_file();"/>
+                                    <input type="hidden" name="file_name" id="file_name" value="" />
 									<% if (admin) { %>
 									<button onclick="location.href='/get_file?file_key=<%=file.file_key%>&user_id=<%=file.user_id%>'" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Download">
 										<i class="bi bi-cloud-download-fill"></i>
 									</button>
-									<button type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Update">
+									<button type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Update" 
+											onclick="document.getElementById('file_name').value ='<%=file.file_key%>';document.getElementById('file-update').click()">
 										<i class="bi bi-arrow-repeat"></i>
 									</button>
 									<button onclick="del_file('<%=file.file_key%>', <%=file.user_id%>);" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Delete">
@@ -100,7 +101,8 @@
 									<button onclick="location.href='/get_file?file_key=<%=file.file_key%>'" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Download">
 										<i class="bi bi-cloud-download-fill"></i>
 									</button>
-									<button type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Update">
+									<button type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Update" 
+											onclick="document.getElementById('file_name').value ='<%=file.file_key%>';document.getElementById('file-update').click()">
 										<i class="bi bi-arrow-repeat"></i>
 									</button>
 									<button onclick="del_file('<%=file.file_key%>', null);" type="button" class="btn btn-outline-dark btn-circle btn-lg" data-toggle="tooltip" title="Delete">
@@ -124,6 +126,10 @@
 	</div>
 
 	<script type="text/javascript">
+        $(function () {
+            $('[data-toggle="tooltip"]').tooltip()
+		})
+
 		function upload_file() {
 			if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
 				alert('The File APIs are not fully supported in this browser.');
@@ -146,7 +152,10 @@
 					.then((response) => response.json())
 					.then((result) => {
 						if (result.code == 200) {
-							location.reload();
+                            show_alert(result.message, 'alert-success');
+                            setTimeout(function () {
+                                location.reload();
+                            }, 2000);
 						} else {
 							show_alert(result.message, 'alert-danger');
 						}
@@ -155,6 +164,40 @@
 				alert("Please select your file");
 			}
 		}
+
+        function update_file() {
+            if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
+                alert('The File APIs are not fully supported in this browser.');
+                return;
+            }
+            const formData = new FormData();
+
+            const files = document.getElementById('file-update').files;
+            const file_name = document.getElementById('file_name').value;
+            if (files.length > 0) {
+                var file = files[0];
+                formData.append('file', file);
+                formData.append('file_name', file_name);
+
+                fetch('/update_file', {
+                    method: "POST",
+                    body: formData,
+                })
+                    .then((response) => response.json())
+                    .then((result) => {
+						if (result.code == 200) {
+							show_alert(result.message, 'alert-success');
+                            setTimeout(function () {
+                                location.reload();
+                            }, 2000);
+                        } else {
+                            show_alert(result.message, 'alert-danger');
+                        }
+                    })
+            } else {
+                alert("Please select your file");
+            }
+        }
 
 		function del_file(file_key, user_id) {
 			fetch("/del_file", {
@@ -171,7 +214,10 @@
 				.then((result) => {
 					console.log(result);
 					if (result.code == 200) {
-						location.reload();
+                        show_alert(result.message, 'alert-success');
+                        setTimeout(function () {
+                            location.reload();
+                        }, 2000);
 					} else {
 						show_alert(result.message, 'alert-danger');
 					}

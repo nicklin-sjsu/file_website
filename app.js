@@ -157,7 +157,7 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
         var sql1 = mysql.format('SELECT * FROM files WHERE user_id = ? AND file_key = ?', [user_id, file_name]);
         con.query(sql1, function (err, result) {
             if (result.length > 0) {
-                res.send({ 'code': 400, 'message': 'file with same name exists, please use another name' });
+                res.send({ 'code': 400, 'message': 'File with same name exists, please use another name' });
             } else {
                 var params = {
                     Body: file_content,
@@ -172,11 +172,44 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
                             [user_id, file_name, description]);
                         con.query(sql, function (err, result) {
                             if (err) {
-                                res.send({ 'code': 400, 'message': 'internal upload error' });
+                                res.send({ 'code': 400, 'message': 'Internal upload error' });
                             } else {
                                 res.send({ 'code': 200, 'message': file_name + ' uploaded successfully' });
                             }
                         });
+                    }
+                });
+            }
+        });
+    });
+});
+
+app.post('/update_file', checkAuthenticated, function (req, res) {
+    var user_id = req.user.id;
+    var form = new multiparty.Form();
+    form.parse(req, (err, fields, files) => {
+        var fields_list = Object.entries(fields);
+        var files_list = Object.entries(files);
+        var file = files_list[0][1][0];
+        var file_name = fields_list[0][1];
+        const file_content = fs.readFileSync(file.path);
+        
+        var params = {
+            Body: file_content,
+            Bucket: 'fileweb-aws-s3',
+            Key: user_id + "/" + file_name
+        };
+        s3.putObject(params, function (err, data) {
+            if (err) console.log(err, err.stack);
+            else {
+                console.log(file_name + " uploaded");
+                var sql = mysql.format('UPDATE files SET update_time = ?, WHERE user_id = ? AND file_name = ?',
+                    [, description, user_id, file_name]);
+                con.query(sql, function (err, result) {
+                    if (err) {
+                        res.send({ 'code': 400, 'message': 'Internal update error' });
+                    } else {
+                        res.send({ 'code': 200, 'message': file_name + ' uploaded successfully' });
                     }
                 });
             }
@@ -214,7 +247,7 @@ app.get('/get_file', checkAuthenticated, function (req, res) {
 app.post('/del_file', checkAuthenticated, function (req, res) {
     var file_key = req.body.file_key;
     var user_id = req.user.id;
-    if (req.body.user_id != null && req.body.type == 0) {
+    if (req.body.user_id != null && req.uaer.type == 0) {
         user_id = parseInt(req.body.user_id);
     }
 

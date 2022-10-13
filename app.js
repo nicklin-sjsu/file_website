@@ -145,6 +145,7 @@ app.get('/sso', checkNotAuthenticated, function (req, res) {
 });
 
 app.post('/upload_file', checkAuthenticated, function (req, res) {
+    var message;
     var user_id = req.user.id;
     var form = new multiparty.Form();
     form.parse(req, (err, fields, files) => {
@@ -166,15 +167,25 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
                     Key: user_id + "/" + file_name
                 };
                 s3.putObject(params, function (err, data) {
-                    if (err) console.log(err, err.stack);
+                    if (err) {
+                        message = "User " + req.user.id + " uploaded " + file_name + " upload to s3 failed with " + err;
+                        sns_message(message);
+                        console.log(message);
+                    }
                     else {
                         console.log(file_name + " uploaded");
                         var sql = mysql.format('INSERT INTO files (user_id, file_key, description) VALUES (?, ?, ?)',
                             [user_id, file_name, description]);
                         con.query(sql, function (err, result) {
                             if (err) {
+                                message = "User " + req.user.id + " uploaded " + file_name + " insert sql failed with " + err;
+                                sns_message(message);
+                                console.log(message);
                                 res.send({ 'code': 400, 'message': 'Internal upload error' });
                             } else {
+                                message = "User " + req.user.id + " uploaded " + file_name;
+                                sns_message(message);
+                                console.log(message);
                                 res.send({ 'code': 200, 'message': file_name + ' uploaded successfully' });
                             }
                         });
@@ -186,6 +197,7 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
 });
 
 app.post('/update_file', checkAuthenticated, function (req, res) {
+    var message;
     var user_id = req.user.id;
     var form = new multiparty.Form();
     form.parse(req, (err, fields, files) => {
@@ -203,14 +215,18 @@ app.post('/update_file', checkAuthenticated, function (req, res) {
         s3.putObject(params, function (err, data) {
             if (err) console.log(err, err.stack);
             else {
-                console.log("User " + req.user.id + " updated " + file_name + " belonging to user " + user_id);
                 var sql = mysql.format('UPDATE files SET file_key = ? WHERE user_id = ? AND file_key = ?',
                     [file_name, user_id, file_name]);
-                console.log(sql);
                 con.query(sql, function (err, result) {
                     if (err) {
+                        message = "User " + req.user.id + " updated " + file_name + " belonging to user " + user_id + " update sql failed with " + err;
+                        sns_message(message);
+                        console.log(message);
                         res.send({ 'code': 400, 'message': 'Internal update error' });
                     } else {
+                        message = "User " + req.user.id + " updated " + file_name + " belonging to user " + user_id;
+                        sns_message(message);
+                        console.log(message);
                         res.send({ 'code': 200, 'message': file_name + ' uploaded successfully' });
                     }
                 });
@@ -220,6 +236,7 @@ app.post('/update_file', checkAuthenticated, function (req, res) {
 });
 
 app.get('/get_file', checkAuthenticated, function (req, res) {
+    var message;
     var file_key = req.query.file_key;
     var user_id = req.user.id;
     if (req.query.user_id != null && req.user.type == 0) {
@@ -238,6 +255,9 @@ app.get('/get_file', checkAuthenticated, function (req, res) {
                 Key: user_id + "/" + file_key,
             };
             res.attachment(file_key);
+            message = "User " + req.user.id + " downloaded " + file_key + " belonging to user " + user_id;
+            sns_message(message);
+            console.log(message);
             var fileStream = s3.getObject(options).createReadStream();
             fileStream.pipe(res);
         } else {
@@ -269,8 +289,14 @@ app.post('/del_file', checkAuthenticated, function (req, res) {
                         [file_key, user_id]);
                     con.query(sql, function (err, result) {
                         if (err) {
+                            message = "User " + req.user.id + " deleted " + file_key + " belonging to user " + user_id + " failed with " + err;
+                            sns_message(message);
+                            console.log(message);
                             res.send({ 'code': 400, 'message': 'Information error' });
                         } else {
+                            message = "User " + req.user.id + " deleted " + file_key + " belonging to user " + user_id;
+                            sns_message(message);
+                            console.log(message);
                             res.send({ 'code': 200, 'message': 'File <' + file_key + '> deleted' });
                         }
                     })
@@ -284,7 +310,13 @@ app.post('/del_file', checkAuthenticated, function (req, res) {
     
 });
 
-app.post('/signin', checkNotAuthenticated, passport.authenticate('local', {
+function signin_message(req, res, next) {
+    var message = "User " + req.user.id + " signed in";
+    sns_message(message);
+    next();
+}
+
+app.post('/signin', checkNotAuthenticated, signin_message, passport.authenticate('local', {
     successRedirect: '/',
     failureRedirect: '/sso',
     failureFlash: true
@@ -292,6 +324,7 @@ app.post('/signin', checkNotAuthenticated, passport.authenticate('local', {
 
 app.post('/signup', checkNotAuthenticated, function (req, res) {
     try {
+        var message;
         var first_name = req.body.first_name;
         var last_name = req.body.last_name;
         var email = req.body.email;
@@ -311,7 +344,9 @@ app.post('/signup', checkNotAuthenticated, function (req, res) {
                                 console.log(err);
                                 res.send({ 'code': 400, 'message': 'Internal Error' });
                             } else {
-                                console.log('row added to TABLE user');
+                                message = "User " + first_name + " " + last_name + " registered";
+                                console.log(message);
+                                sns_message(message);
                                 res.send({ 'code': 200, 'message': 'Account registered' });
                             }
                         })
@@ -327,6 +362,9 @@ app.post('/signup', checkNotAuthenticated, function (req, res) {
 app.post('/signout', checkAuthenticated, function (req, res, next) {
     req.logout(function (err) {
         if (err) { return next(err); }
+        message = "User " + req.user.id + " signed out";
+        console.log(message);
+        sns_message(message);
         res.redirect('/sso');
     });
 });

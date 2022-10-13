@@ -204,8 +204,9 @@ app.post('/update_file', checkAuthenticated, function (req, res) {
             if (err) console.log(err, err.stack);
             else {
                 console.log("User " + req.user.id + " updated " + file_name + " belonging to user " + user_id);
-                var sql = mysql.format('UPDATE files SET file_name = ?, WHERE user_id = ? AND file_name = ?',
+                var sql = mysql.format('UPDATE files SET file_key = ? WHERE user_id = ? AND file_key = ?',
                     [file_name, user_id, file_name]);
+                console.log(sql);
                 con.query(sql, function (err, result) {
                     if (err) {
                         res.send({ 'code': 400, 'message': 'Internal update error' });

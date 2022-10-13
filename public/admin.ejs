@@ -126,15 +126,22 @@
 					console.error('Error:', error);
 				});
 		}
-		function signout() {
-			fetch("/signout", {
-				method: "POST",
-				headers: {
-					'Content-Type': 'application/json'
-				},
-			})
-				.finally(location.reload());
-		}
+        function signout() {
+            fetch("/signout", {
+                method: "POST",
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+            })
+                .then((response) => response.json())
+                .then((result) => {
+                    if (result.code == 200) {
+                        location.reload();
+                    } else {
+                        show_alert(result.message, 'alert-danger');
+                    }
+                })
+        }
 	</script>
 </body>
 </html>

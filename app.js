@@ -353,11 +353,11 @@ app.post('/signup', checkNotAuthenticated, function (req, res) {
 
 app.post('/signout', checkAuthenticated, function (req, res, next) {
     req.logout(function (err) {
-        if (err) { return next(err); }
+        if (err) { res.send({ 'code': 400, 'message': "Signed out failed" }); }
         message = "User " + req.user_id + " signed out";
         console.log(message);
         sns_message(message);
-        res.redirect('/sso');
+        res.send({ 'code': 200, 'message': "Signed out" });
     });
 });
 

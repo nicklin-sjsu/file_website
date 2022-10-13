@@ -230,7 +230,15 @@
 				headers: {
 					'Content-Type': 'application/json'
 				},
-			}).finally(location.reload());
+			})
+				.then((response) => response.json())
+                .then((result) => {
+                    if (result.code == 200) {
+                        location.reload();
+                    } else {
+                        show_alert(result.message, 'alert-danger');
+                    }
+                })
 		}
 
 		function show_alert(message, alert_class) {

@@ -11,6 +11,7 @@
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.bundle.min.js"></script>
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css">
 	<script src="https://code.jquery.com/jquery-3.5.0.js"></script>
+	<script src="https://sdk.amazonaws.com/js/aws-sdk-2.1.24.min.js"></script>
 </head>
 
 <body class="p-3 m-0 border-0 bd-example" style="background-image: url('background1.jpg'); background-repeat: no-repeat; background-attachment: fixed; background-size: cover;">
@@ -121,31 +122,28 @@
 			</div>
 		</div>
 	</div>
-	<script type="text/javascript">
-		$(document).ready(function () {
-			$('[data-toggle="tooltip"]').tooltip();
-		});
 
+	<script type="text/javascript">
 		function upload_file() {
 			if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
 				alert('The File APIs are not fully supported in this browser.');
 				return;
 			}
-            const formData = new FormData();
+			const formData = new FormData();
 
-            var description = document.getElementById('description').value;
+			var description = document.getElementById('description').value;
 			const files = document.getElementById('form_file').files;
 			if (files.length > 0) {
 				var file = files[0];
-                formData.append('file', file);
-                formData.append('description', description);
+				formData.append('file', file);
+				formData.append('description', description);
 				formData.append('file_name', file.name);
 
-                fetch('/upload_file', {
-                    method: "POST",
-                    body: formData,
-                })
-                    .then((response) => response.json())
+				fetch('/upload_file', {
+					method: "POST",
+					body: formData,
+				})
+					.then((response) => response.json())
 					.then((result) => {
 						if (result.code == 200) {
 							location.reload();
@@ -155,82 +153,11 @@
 					})
 			} else {
 				alert("Please select your file");
-            }
-			
-      //      let files = input.files;
-      //      for (let i = 0; i < files.length; i++) {
-      //          let file = files[i];
-      //          let reader = new FileReader();
-      //          reader.addEventListener('loadend', function (e) {
-      //              fetch('https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/' + file.name, {
-      //                  method: "POST",
-						//body: new Blob([reader.result], { type: file.type }),
-						//mode: "cors"
-      //              })
-      //                  .then((response) => {
-      //                      if (response.ok) {
-						//		alert("ok");
-      //                      } else {
-      //                          alert('Error uploading [' + file.name + ']. Max upload size is ~4MB.');
-      //                      }
-      //                  });
-      //          });
-      //          reader.readAsArrayBuffer(file);
-      //      }
-			//const formData = new FormData();
-			//const input = document.getElementById('formFile');
-			//var files = input.files;
-			//var description = document.getElementById('description').value;
-
-   //         for (let i = 0; i < files.length; i++) {
-   //             let file = files[i];
-   //             let reader = new FileReader();
-   //             reader.addEventListener('loadend', function (e) {
-   //                 fetch('/upload_file', {
-			//			method: "POST",
-   //                     body: new Blob([reader.result], { type: file.type, description: description }),
-   //                     mode: "cors"
-   //                 })
-   //                     .then((response) => {
-   //                         if (response.ok) {
-   //                             let uploadedFileNode = document.createElement('div');
-   //                             uploadedFileNode.innerHTML = file.name;
-   //                             list.appendChild(uploadedFileNode);
-   //                         } else {
-   //                             alert('Error uploading [' + file.name + ']. Max upload size is ~4MB.');
-   //                         }
-   //                     });
-   //             });
-   //             reader.readAsArrayBuffer(file);
-   //         }
-
-			//for (const file of input.files) {
-
-			//	formData.append(i, description);
-			//	formData.append(i, file);
-			//	i++;
-			//}
-
-			//fetch('/upload_file', {
-			//	method: 'POST',
-			//	body: formData,
-			//	mode: "cors",
-			//})
-			//	.then((response) => response.json())
-			//	.then((result) => {
-			//		if (result.code == 200) {
-			//			location.reload();
-			//		} else {
-   //                     show_alert(result.message, 'alert-danger');
-   //                 }
-			//	})
-			//	.catch((error) => {
-   //                 show_alert(result.message, 'alert-danger');
-			//	});
+			}
 		}
 
 		function del_file(file_key, user_id) {
-            fetch("/del_file", {
+			fetch("/del_file", {
 				method: "POST",
 				headers: {
 					'Content-Type': 'application/json'
@@ -241,15 +168,15 @@
 				})
 			})
 				.then((result) => result.json())
-                .then((result) => {
-                    console.log(result);
-                    if (result.code == 200) {
-                        location.reload();
+				.then((result) => {
+					console.log(result);
+					if (result.code == 200) {
+						location.reload();
 					} else {
-                        show_alert(result.message, 'alert-danger');
+						show_alert(result.message, 'alert-danger');
 					}
-                }).catch(console.error);
-        }
+				}).catch(console.error);
+		}
 
 		function signout() {
 			fetch("/signout", {
@@ -265,7 +192,7 @@
 			main_alert.className = 'alert alert-dismissible fade m-3 text-center show';
 			main_alert.classList.add(alert_class);
 			main_alert.innerHTML = message;
-        }
+		}
 	</script>
 </body>
 </html>

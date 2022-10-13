@@ -78,3 +78,9 @@ con.query(sql, function (err, result) {
     console.log("row added to TABLE user");
 });
 
+var sql = "INSERT INTO users (first_name, last_name, email, password, type) VALUES ('admin', 'admin', 'admin@admin.com', '$2b$10$X/zruJudGuCAwm6DbzcKVundUlCgJ1vG3gGQ/Lo/cboerLXyFJrtW', 0)";
+con.query(sql, function (err, result) {
+    if (err) throw err;
+    console.log("row added to TABLE user");
+});
+

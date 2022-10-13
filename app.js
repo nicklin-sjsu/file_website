@@ -16,6 +16,7 @@ const con = require('./db_connect.js');
 const url = require('url');
 const moment = require("moment");
 const multiparty = require("multiparty");
+const fs = require('fs');
 const app = express();
 
 const port = process.env.PORT || 3000;
@@ -203,8 +204,8 @@ app.post('/update_file', checkAuthenticated, function (req, res) {
             if (err) console.log(err, err.stack);
             else {
                 console.log(file_name + " uploaded");
-                var sql = mysql.format('UPDATE files SET update_time = ?, WHERE user_id = ? AND file_name = ?',
-                    [, description, user_id, file_name]);
+                var sql = mysql.format('UPDATE files SET user_id = ?, WHERE user_id = ? AND file_name = ?',
+                    [user_id, user_id, file_name]);
                 con.query(sql, function (err, result) {
                     if (err) {
                         res.send({ 'code': 400, 'message': 'Internal update error' });

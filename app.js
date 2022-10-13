@@ -1,31 +1,23 @@
 const express = require('express');
-const request = require('request');
 const mysql = require('mysql');
 const bcrypt = require("bcrypt");
-const formidable = require("formidable");
 const AWS = require('aws-sdk');
 const bodyParser = require('body-parser');
-const path = require('path');
-const dotenv = require('dotenv');
 const passport = require('passport');
 const initializePassport = require('./passport-config');
 const flash = require('express-flash');
 const session = require('express-session');
 const methodOverride = require('method-override');
 const con = require('./db_connect.js');
-const url = require('url');
 const moment = require("moment");
 const multiparty = require("multiparty");
 const fs = require('fs');
 const app = express();
+require('dotenv').config();
 
 const port = process.env.PORT || 3000;
 //var snsTopic = process.env.NEW_SIGNUP_TOPIC;
 const lambda_url = process.env.LAMBDA_URL || 'https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/';
-
-dotenv.config({
-    path: path.resolve(__dirname, `.env.${process.env.NODE_ENV}`)
-});
 
 AWS.config.update({
     region: 'us-west-1',
@@ -311,7 +303,7 @@ app.post('/del_file', checkAuthenticated, function (req, res) {
 });
 
 function signin_message(req, res, next) {
-    var message = "User " + req.signinEmail + " signed in";
+    var message = "User " + req.body.signinEmail + " signed in";
     sns_message(message);
     next();
 }
@@ -362,7 +354,7 @@ app.post('/signup', checkNotAuthenticated, function (req, res) {
 app.post('/signout', checkAuthenticated, function (req, res, next) {
     req.logout(function (err) {
         if (err) { return next(err); }
-        message = "User " + req.user.id + " signed out";
+        message = "User " + req.user_id + " signed out";
         console.log(message);
         sns_message(message);
         res.redirect('/sso');
@@ -372,6 +364,9 @@ app.post('/signout', checkAuthenticated, function (req, res, next) {
 function checkAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
         return next();
+    }
+    if (req.user) {
+        req.user_id = req.user.id;
     }
     res.redirect('/sso');
 }

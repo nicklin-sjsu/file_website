@@ -311,7 +311,7 @@ app.post('/del_file', checkAuthenticated, function (req, res) {
 });
 
 function signin_message(req, res, next) {
-    var message = "User " + req.user.id + " signed in";
+    var message = "User " + req.signinEmail + " signed in";
     sns_message(message);
     next();
 }

@@ -18,9 +18,15 @@ require('dotenv').config();
 const port = process.env.PORT || 3000;
 //var snsTopic = process.env.NEW_SIGNUP_TOPIC;
 const lambda_url = process.env.LAMBDA_URL || 'https://uw25lpeced.execute-api.us-west-2.amazonaws.com/Prod/api/';
-
+console.log({
+    host: process.env.DATABASE_HOST || 'localhost',
+    user: process.env.DATABASE_USER || 'root',
+    password: process.env.DATABASE_PWD || 'root',
+    port: process.env.DATABASE_PORT || 3306,
+    database: process.env.DATABASE_DATABASE || 'file_website',
+});
 AWS.config.update({
-    region: 'us-west-1',
+    region: process.env.REGION,
     apiVersion: 'latest',
     credentials: {
         accessKeyId: process.env.AWS_ACCESS_KEY,
@@ -40,8 +46,7 @@ function sns_message(message) {
     if (process.env.NODE_ENV == 'production') {
         var params = {
             Message: message,
-            TopicArn: process.env.TOPIC_ARN,
-            MessageGroupId: 'product-214'
+            TopicArn: process.env.TOPIC_ARN
         };
         var publishTextPromise = new AWS.SNS({ apiVersion: '2010-03-31' }).publish(params).promise();
         publishTextPromise
@@ -155,7 +160,7 @@ app.post('/upload_file', checkAuthenticated, function (req, res) {
             } else {
                 var params = {
                     Body: file_content,
-                    Bucket: 'fileweb-aws-s3',
+                    Bucket: process.env.BUCKET_NAME,
                     Key: user_id + "/" + file_name
                 };
                 s3.putObject(params, function (err, data) {
@@ -201,7 +206,7 @@ app.post('/update_file', checkAuthenticated, function (req, res) {
         
         var params = {
             Body: file_content,
-            Bucket: 'fileweb-aws-s3',
+            Bucket: process.env.BUCKET_NAME,
             Key: user_id + "/" + file_name
         };
         s3.putObject(params, function (err, data) {
@@ -243,7 +248,7 @@ app.get('/get_file', checkAuthenticated, function (req, res) {
         }
         if (result.length > 0) {
             var options = {
-                Bucket: 'fileweb-aws-s3',
+                Bucket: process.env.BUCKET_NAME,
                 Key: user_id + "/" + file_key,
             };
             res.attachment(file_key);
@@ -272,7 +277,7 @@ app.post('/del_file', checkAuthenticated, function (req, res) {
             res.send({ 'code': 400, 'message': 'Information error' });
         }
         if (result.length > 0) {
-            var params = { Bucket: 'fileweb-aws-s3', Key: user_id + "/" + file_key };
+            var params = { Bucket: process.env.BUCKET_NAME, Key: user_id + "/" + file_key };
 
             s3.deleteObject(params, function (err, data) {
                 if (err) console.log(err, err.stack);
